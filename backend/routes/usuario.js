@@ -17,7 +17,6 @@ function verificarToken(req, res, next) {
   }
 }
 
-// Actualizar XP después de una partida
 router.post('/actualizar-xp', verificarToken, async (req, res) => {
   const { xp_ganado, gano } = req.body
 
@@ -27,10 +26,6 @@ router.post('/actualizar-xp', verificarToken, async (req, res) => {
     )
     const usuario = result.rows[0]
 
-    const nuevoXP = usuario.xp + xp_ganado
-    const subioNivel = nuevoXP >= (usuario.nivel * 200 + 300)
-    const nuevoNivel = subioNivel ? usuario.nivel + 1 : usuario.nivel
-
     function calcularRango(nivel) {
       if (nivel >= 10) return '🥇 Street Legend'
       if (nivel >= 6) return '🥈 Native Vibe'
@@ -38,28 +33,28 @@ router.post('/actualizar-xp', verificarToken, async (req, res) => {
     }
 
     const xpSiguiente = usuario.nivel * 200 + 300
-const nuevoXP = usuario.xp + xp_ganado
-const subioNivel = nuevoXP >= xpSiguiente
-const nuevoNivel = subioNivel ? usuario.nivel + 1 : usuario.nivel
-const xpFinal = subioNivel ? nuevoXP - xpSiguiente : nuevoXP
+    const xpTotal = usuario.xp + xp_ganado
+    const subioNivel = xpTotal >= xpSiguiente
+    const nuevoNivel = subioNivel ? usuario.nivel + 1 : usuario.nivel
+    const xpFinal = subioNivel ? xpTotal - xpSiguiente : xpTotal
 
-const actualizado = await pool.query(
-  `UPDATE usuarios SET
-    xp = $1,
-    nivel = $2,
-    rango = $3,
-    partidas = partidas + 1,
-    victorias = victorias + $4
-  WHERE id = $5
-  RETURNING id, nombre, email, xp, nivel, racha, partidas, victorias, rango`,
-  [
-    xpFinal,
-    nuevoNivel,
-    calcularRango(nuevoNivel),
-    gano ? 1 : 0,
-    req.usuarioId
-  ]
-)
+    const actualizado = await pool.query(
+      `UPDATE usuarios SET
+        xp = $1,
+        nivel = $2,
+        rango = $3,
+        partidas = partidas + 1,
+        victorias = victorias + $4
+      WHERE id = $5
+      RETURNING id, nombre, email, xp, nivel, racha, partidas, victorias, rango`,
+      [
+        xpFinal,
+        nuevoNivel,
+        calcularRango(nuevoNivel),
+        gano ? 1 : 0,
+        req.usuarioId
+      ]
+    )
 
     res.json({ usuario: actualizado.rows[0] })
   } catch (err) {
@@ -68,7 +63,6 @@ const actualizado = await pool.query(
   }
 })
 
-// Obtener datos actuales del usuario
 router.get('/perfil', verificarToken, async (req, res) => {
   try {
     const result = await pool.query(
