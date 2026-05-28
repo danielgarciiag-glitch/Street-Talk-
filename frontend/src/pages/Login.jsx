@@ -15,8 +15,8 @@ function Login({ onLogin }) {
     setError('')
 
     const url = modo === 'login'
-      ? 'https://street-talk-backend.onrender.com'
-      : 'https://street-talk-backend.onrender.com'
+      ? 'https://street-talk-backend.onrender.com/auth/login'
+      : 'https://street-talk-backend.onrender.com/auth/registro'
 
     const body = modo === 'login'
       ? { email: form.email, password: form.password }
