@@ -86,7 +86,7 @@ function Arena() {
   async function guardarEnDB(xp, gano) {
     const token = localStorage.getItem('token')
     try {
-      await fetch('http://localhost:3000/usuario/actualizar-xp', {
+      await fetch('https://street-talk-backend.onrender.com/usuario/actualizar-xp', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
