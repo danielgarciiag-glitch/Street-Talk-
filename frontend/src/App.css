@@ -1062,3 +1062,10 @@ body::after {
   letter-spacing: 0.15em;
   text-transform: uppercase;
 }
+.leccion-idioma-tag {
+  font-size: 0.75rem;
+  color: var(--blue);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
