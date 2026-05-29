@@ -1069,3 +1069,104 @@ body::after {
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
+.desafio-tabs {
+  display: flex;
+  gap: 12px;
+}
+
+.desafio-buscar {
+  width: 100%;
+  max-width: 600px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.buscar-input-group {
+  display: flex;
+  gap: 12px;
+}
+
+.buscar-input-group .input-field {
+  flex: 1;
+}
+
+.resultados-lista,
+.pendientes-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.rival-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 18px 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  transition: all 0.2s;
+}
+
+.rival-card:hover {
+  border-color: rgba(255,229,0,0.3);
+  transform: translateX(4px);
+}
+
+.rival-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.rival-nombre {
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.rival-rango {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+}
+
+.rival-xp {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--yellow);
+}
+
+.btn-retar {
+  background: transparent;
+  border: 1px solid var(--yellow);
+  color: var(--yellow);
+  padding: 8px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 0.82rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-family: var(--font-body);
+  transition: all 0.2s;
+}
+
+.btn-retar:hover {
+  background: var(--yellow);
+  color: #000;
+  box-shadow: 0 0 20px rgba(255,229,0,0.3);
+}
+
+.desafio-mensaje {
+  background: var(--bg-card);
+  border: 1px solid rgba(255,229,0,0.3);
+  border-radius: 10px;
+  padding: 12px 24px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  animation: fadeIn 0.3s ease;
+}
