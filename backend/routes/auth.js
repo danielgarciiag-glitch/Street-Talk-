@@ -29,8 +29,9 @@ router.post('/registro', async (req, res) => {
     const token = jwt.sign({ id: usuario.id }, process.env.JWT_SECRET, { expiresIn: '7d' })
 
     res.json({ token, usuario })
-  } catch (err) {
-    res.status(500).json({ error: 'Error en el servidor' })
+ } catch (err) {
+    console.error('ERROR LOGIN:', err.message)
+    res.status(500).json({ error: err.message })
   }
 })
 
@@ -70,8 +71,9 @@ router.post('/login', async (req, res) => {
         rango: usuario.rango
       }
     })
-  } catch (err) {
-    res.status(500).json({ error: 'Error en el servidor' })
+ } catch (err) {
+    console.error('ERROR REGISTRO:', err.message)
+    res.status(500).json({ error: err.message })
   }
 })
 
