@@ -701,3 +701,63 @@ body {
   color: #f5c518;
   font-weight: 700;
 }
+.vm-palabra {
+  font-size: 2rem;
+  font-weight: 900;
+  color: #f5c518;
+  text-align: center;
+}
+
+.vm-definicion {
+  font-size: 1.1rem;
+  color: white;
+  text-align: center;
+  font-style: italic;
+  line-height: 1.5;
+}
+
+.vm-explicacion {
+  background-color: #0f0f0f;
+  border-radius: 12px;
+  padding: 14px;
+  color: #f5c518;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.vm-opciones {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.vm-btn {
+  padding: 20px;
+  border-radius: 14px;
+  font-size: 1.1rem;
+  font-weight: 800;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: all 0.2s;
+}
+
+.vm-btn.verdad {
+  background-color: #1a472a;
+  color: #2ecc71;
+  border-color: #2ecc71;
+}
+
+.vm-btn.mentira {
+  background-color: #4a1a1a;
+  color: #e74c3c;
+  border-color: #e74c3c;
+}
+
+.vm-btn.correcta {
+  transform: scale(1.05);
+  box-shadow: 0 0 20px rgba(46, 204, 113, 0.5);
+}
+
+.vm-btn.incorrecta {
+  opacity: 0.5;
+}

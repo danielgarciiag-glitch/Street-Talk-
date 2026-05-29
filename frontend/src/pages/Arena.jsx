@@ -68,6 +68,50 @@ const modos = {
       pista: "Carisma y poder de atracción",
       opciones: ["rizz", "bet", "sus", "slay"]
     }
+  ],
+  verdadmentira: [
+    {
+      id: 1,
+      palabra: "No cap",
+      definicion: "Significa que estás mintiendo o exagerando",
+      respuesta_correcta: "mentira",
+      explicacion: "No cap significa que estás diciendo la verdad, sin mentira."
+    },
+    {
+      id: 2,
+      palabra: "Bussin",
+      definicion: "Se usa para decir que algo está delicioso o increíble",
+      respuesta_correcta: "verdad",
+      explicacion: "Bussin se usa para describir comida muy buena o algo increíble."
+    },
+    {
+      id: 3,
+      palabra: "Lowkey",
+      definicion: "Significa hacer algo de forma discreta o en secreto",
+      respuesta_correcta: "verdad",
+      explicacion: "Lowkey significa algo que haces sin llamar la atención."
+    },
+    {
+      id: 4,
+      palabra: "Slay",
+      definicion: "Significa fallar o hacerlo mal en algo",
+      respuesta_correcta: "mentira",
+      explicacion: "Slay significa hacerlo increíble, brillar y destacar."
+    },
+    {
+      id: 5,
+      palabra: "Sus",
+      definicion: "Significa que algo o alguien es sospechoso o raro",
+      respuesta_correcta: "verdad",
+      explicacion: "Sus viene de suspicious y se usa para algo o alguien sospechoso."
+    },
+    {
+      id: 6,
+      palabra: "Rizz",
+      definicion: "Significa tener mucho dinero o ser rico",
+      respuesta_correcta: "mentira",
+      explicacion: "Rizz significa carisma y poder de atracción, no dinero."
+    }
   ]
 }
 
@@ -79,6 +123,7 @@ function Arena() {
   const [puntaje, setPuntaje] = useState(0)
   const [terminado, setTerminado] = useState(false)
   const [xpGanado, setXpGanado] = useState(0)
+  const [explicacion, setExplicacion] = useState(null)
 
   const preguntas = modoActivo ? modos[modoActivo] : []
   const pregunta = preguntas[indice]
@@ -86,7 +131,7 @@ function Arena() {
   async function guardarEnDB(xp, gano) {
     const token = localStorage.getItem('token')
     try {
-     await fetch('https://street-talk-backend.onrender.com/usuario/actualizar-xp', {
+      await fetch('https://street-talk-backend.onrender.com/usuario/actualizar-xp', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -109,10 +154,15 @@ function Arena() {
       setXpGanado(x => x + 50)
     }
 
+    if (modoActivo === 'verdadmentira') {
+      setExplicacion(pregunta.explicacion)
+    }
+
     setTimeout(async () => {
       if (indice + 1 < preguntas.length) {
         setIndice(indice + 1)
         setSeleccion(null)
+        setExplicacion(null)
       } else {
         const xpFinal = esCorrecta ? xpGanado + 50 : xpGanado
         const gano = puntaje + (esCorrecta ? 1 : 0) >= Math.floor(preguntas.length / 2)
@@ -121,7 +171,7 @@ function Arena() {
         else sumarPartida()
         setTerminado(true)
       }
-    }, 1200)
+    }, modoActivo === 'verdadmentira' ? 2000 : 1200)
   }
 
   function reiniciar() {
@@ -131,9 +181,9 @@ function Arena() {
     setTerminado(false)
     setXpGanado(0)
     setModoActivo(null)
+    setExplicacion(null)
   }
 
-  // PANTALLA DE SELECCIÓN DE MODO
   if (!modoActivo) {
     return (
       <div className="container">
@@ -155,11 +205,11 @@ function Arena() {
             <span className="modo-xp">+50 XP por respuesta</span>
           </div>
 
-          <div className="modo-selector bloqueado">
-            <span className="modo-icon">🎤</span>
-            <h3>Debates Rápidos</h3>
-            <p>Próximamente</p>
-            <span className="modo-xp">🔒 Pronto</span>
+          <div className="modo-selector" onClick={() => setModoActivo('verdadmentira')}>
+            <span className="modo-icon">🤔</span>
+            <h3>¿Verdad o Mentira?</h3>
+            <p>¿La definición del slang es correcta?</p>
+            <span className="modo-xp">+50 XP por respuesta</span>
           </div>
 
           <div className="modo-selector bloqueado">
@@ -173,7 +223,6 @@ function Arena() {
     )
   }
 
-  // PANTALLA DE RESULTADO
   if (terminado) {
     return (
       <div className="container">
@@ -193,7 +242,54 @@ function Arena() {
     )
   }
 
-  // PANTALLA DE JUEGO
+  if (modoActivo === 'verdadmentira') {
+    return (
+      <div className="container">
+        <h1 className="logo">⚔️ Language Arena</h1>
+        <p className="tagline">🤔 ¿Verdad o Mentira?</p>
+
+        <div className="arena-card">
+          <div className="arena-progreso">
+            <span>Pregunta {indice + 1} de {preguntas.length}</span>
+            <span>⭐ {puntaje} pts</span>
+          </div>
+
+          <h2 className="vm-palabra">{pregunta.palabra}</h2>
+          <p className="vm-definicion">"{pregunta.definicion}"</p>
+
+          {explicacion && (
+            <div className="vm-explicacion">
+              💡 {explicacion}
+            </div>
+          )}
+
+          <div className="vm-opciones">
+            <button
+              className={`vm-btn verdad 
+                ${seleccion === 'verdad' && pregunta.respuesta_correcta === 'verdad' ? 'correcta' : ''}
+                ${seleccion === 'verdad' && pregunta.respuesta_correcta !== 'verdad' ? 'incorrecta' : ''}
+                ${seleccion && pregunta.respuesta_correcta === 'verdad' ? 'correcta' : ''}
+              `}
+              onClick={() => responder('verdad')}
+            >
+              ✅ Verdad
+            </button>
+            <button
+              className={`vm-btn mentira
+                ${seleccion === 'mentira' && pregunta.respuesta_correcta === 'mentira' ? 'correcta' : ''}
+                ${seleccion === 'mentira' && pregunta.respuesta_correcta !== 'mentira' ? 'incorrecta' : ''}
+                ${seleccion && pregunta.respuesta_correcta === 'mentira' ? 'correcta' : ''}
+              `}
+              onClick={() => responder('mentira')}
+            >
+              ❌ Mentira
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="container">
       <h1 className="logo">⚔️ Language Arena</h1>
