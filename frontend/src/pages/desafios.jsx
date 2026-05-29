@@ -1,5 +1,5 @@
-/* eslint-disable react-hooks/exhaustive-deps */
-/* eslint-disable react-hooks/set-state-in-effect */
+// frontend/src/pages/desafios.jsx
+
 import { useState, useEffect } from 'react'
 import { useUser } from '../useUser'
 
@@ -35,6 +35,7 @@ const API = 'https://street-talk-backend.onrender.com'
 
 function Desafios() {
   useUser()
+
   const [tab, setTab] = useState('buscar')
   const [busqueda, setBusqueda] = useState('')
   const [resultados, setResultados] = useState([])
@@ -49,35 +50,75 @@ function Desafios() {
 
   const token = localStorage.getItem('token')
 
-  async function cargarPendientes() {
-    try {
-      const res = await fetch(`${API}/desafios/pendientes`, {
-        headers: { authorization: token }
-      })
-      const data = await res.json()
-      if (data.desafios) setPendientes(data.desafios)
-    } catch (err) {
-      console.error(err)
-    }
-  }
-
+  // CARGAR PENDIENTES
   useEffect(() => {
-    cargarPendientes()
-  }, [])
+    let mounted = true
+
+    async function obtenerPendientes() {
+      try {
+        const res = await fetch(`${API}/desafios/pendientes`, {
+          headers: {
+            authorization: token
+          }
+        })
+
+        const data = await res.json()
+
+        console.log('Pendientes:', data)
+
+        if (mounted && data.desafios) {
+          setPendientes(data.desafios)
+        }
+      } catch (err) {
+        console.error(err)
+      }
+    }
+
+    if (token) {
+      obtenerPendientes()
+    }
+
+    return () => {
+      mounted = false
+    }
+  }, [token])
+
+  // LIMPIAR MENSAJE
+  useEffect(() => {
+    if (!mensaje) return
+
+    const timeout = setTimeout(() => {
+      setMensaje('')
+    }, 3000)
+
+    return () => clearTimeout(timeout)
+  }, [mensaje])
 
   async function buscarUsuario() {
     if (!busqueda.trim()) return
+
     setCargando(true)
+
     try {
-      const res = await fetch(`${API}/desafios/buscar/${busqueda}`, {
-        headers: { authorization: token }
-      })
+      const res = await fetch(
+        `${API}/desafios/buscar/${busqueda}`,
+        {
+          headers: {
+            authorization: token
+          }
+        }
+      )
+
       const data = await res.json()
+
+      console.log(data)
+
       setResultados(data.usuarios || [])
     } catch (err) {
       console.error(err)
+    } finally {
+      setCargando(false)
     }
-    setCargando(false)
   }
 
   async function enviarDesafio(retado_id) {
@@ -88,9 +129,16 @@ function Desafios() {
           'Content-Type': 'application/json',
           authorization: token
         },
-        body: JSON.stringify({ retado_id, idioma: 'Inglés' })
+        body: JSON.stringify({
+          retado_id,
+          idioma: 'Inglés'
+        })
       })
+
       const data = await res.json()
+
+      console.log(data)
+
       if (data.error) {
         setMensaje('⚠️ ' + data.error)
       } else {
@@ -98,9 +146,9 @@ function Desafios() {
         setResultados([])
         setBusqueda('')
       }
-      setTimeout(() => setMensaje(''), 3000)
     } catch (err) {
       console.error(err)
+      setMensaje('❌ Error enviando desafío')
     }
   }
 
@@ -114,55 +162,109 @@ function Desafios() {
 
   function responder(opcion) {
     if (seleccion) return
+
     setSeleccion(opcion)
 
-    const esCorrecta = opcion === preguntasDesafio[indice].respuesta_correcta
-    if (esCorrecta) setPuntaje(p => p + 1)
+    const esCorrecta =
+      opcion === preguntasDesafio[indice].respuesta_correcta
+
+    const nuevoPuntaje = esCorrecta
+      ? puntaje + 1
+      : puntaje
+
+    if (esCorrecta) {
+      setPuntaje(prev => prev + 1)
+    }
 
     setTimeout(async () => {
       if (indice + 1 < preguntasDesafio.length) {
-        setIndice(indice + 1)
+        setIndice(prev => prev + 1)
         setSeleccion(null)
       } else {
-        const puntajeFinal = esCorrecta ? puntaje + 1 : puntaje
         try {
-          await fetch(`${API}/desafios/completar/${desafioActivo.id}`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              authorization: token
-            },
-            body: JSON.stringify({ puntaje: puntajeFinal })
-          })
+          await fetch(
+            `${API}/desafios/completar/${desafioActivo.id}`,
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                authorization: token
+              },
+              body: JSON.stringify({
+                puntaje: nuevoPuntaje
+              })
+            }
+          )
         } catch (err) {
           console.error(err)
         }
+
         setTerminado(true)
-        cargarPendientes()
       }
     }, 1200)
   }
 
+  // VALIDACIÓN
+  if (
+    desafioActivo &&
+    !terminado &&
+    !preguntasDesafio[indice]
+  ) {
+    return (
+      <div className="container">
+        <h1>Error cargando preguntas</h1>
+      </div>
+    )
+  }
+
+  // JUEGO
   if (desafioActivo && !terminado) {
     const pregunta = preguntasDesafio[indice]
+
     return (
       <div className="container">
         <h1 className="logo">⚔️ Desafío</h1>
-        <p className="tagline">Pregunta {indice + 1} de {preguntasDesafio.length}</p>
+
+        <p className="tagline">
+          Pregunta {indice + 1} de {preguntasDesafio.length}
+        </p>
+
         <div className="arena-card">
           <div className="arena-progreso">
-            <span>Pregunta {indice + 1} de {preguntasDesafio.length}</span>
+            <span>
+              Pregunta {indice + 1} de {preguntasDesafio.length}
+            </span>
+
             <span>⭐ {puntaje} pts</span>
           </div>
-          <h2 className="arena-frase">"{pregunta.frase}"</h2>
+
+          <h2 className="arena-frase">
+            "{pregunta.frase}"
+          </h2>
+
           <div className="arena-opciones">
             {pregunta.opciones.map(opcion => (
               <button
                 key={opcion}
                 className={`opcion-btn
-                  ${seleccion === opcion && opcion === pregunta.respuesta_correcta ? 'correcta' : ''}
-                  ${seleccion === opcion && opcion !== pregunta.respuesta_correcta ? 'incorrecta' : ''}
-                  ${seleccion && opcion === pregunta.respuesta_correcta ? 'correcta' : ''}
+                  ${
+                    seleccion === opcion &&
+                    opcion === pregunta.respuesta_correcta
+                      ? 'correcta'
+                      : ''
+                  }
+                  ${
+                    seleccion === opcion &&
+                    opcion !== pregunta.respuesta_correcta
+                      ? 'incorrecta'
+                      : ''
+                  }
+                  ${
+                    seleccion &&
+                    opcion === pregunta.respuesta_correcta
+                      ? 'correcta'
+                      : ''
+                  }
                 `}
                 onClick={() => responder(opcion)}
               >
@@ -175,43 +277,80 @@ function Desafios() {
     )
   }
 
+  // RESULTADO
   if (desafioActivo && terminado) {
     return (
       <div className="container">
         <h1 className="logo">⚔️ Resultado</h1>
+
         <div className="resultado-card">
-          <p className="resultado-emoji">{puntaje >= 4 ? '🏆' : puntaje >= 3 ? '💪' : '😅'}</p>
+          <p className="resultado-emoji">
+            {puntaje >= 4
+              ? '🏆'
+              : puntaje >= 3
+              ? '💪'
+              : '😅'}
+          </p>
+
           <h2 className="resultado-titulo">
-            {puntaje >= 4 ? '¡Dominaste!' : puntaje >= 3 ? '¡Buen duelo!' : '¡Sigue entrenando!'}
+            {puntaje >= 4
+              ? '¡Dominaste!'
+              : puntaje >= 3
+              ? '¡Buen duelo!'
+              : '¡Sigue entrenando!'}
           </h2>
-          <p className="resultado-puntaje">{puntaje} / {preguntasDesafio.length} correctas</p>
-          <button className="btn-primary" onClick={() => setDesafioActivo(null)}>
-            Volver a Desafíos
+
+          <p className="resultado-puntaje">
+            {puntaje} / {preguntasDesafio.length}
+          </p>
+
+          <button
+            className="btn-primary"
+            onClick={() => setDesafioActivo(null)}
+          >
+            Volver
           </button>
         </div>
       </div>
     )
   }
 
+  // PANTALLA PRINCIPAL
   return (
     <div className="container">
       <h1 className="logo">⚔️ Desafíos</h1>
-      <p className="tagline">Reta a otros jugadores y demuestra quién habla mejor</p>
 
-      {mensaje && <div className="desafio-mensaje">{mensaje}</div>}
+      <p className="tagline">
+        Reta a otros jugadores
+      </p>
+
+      {mensaje && (
+        <div className="desafio-mensaje">
+          {mensaje}
+        </div>
+      )}
 
       <div className="desafio-tabs">
         <button
-          className={tab === 'buscar' ? 'filtro-activo' : 'filtro-btn'}
+          className={
+            tab === 'buscar'
+              ? 'filtro-activo'
+              : 'filtro-btn'
+          }
           onClick={() => setTab('buscar')}
         >
           🔍 Buscar rival
         </button>
+
         <button
-          className={tab === 'pendientes' ? 'filtro-activo' : 'filtro-btn'}
-          onClick={() => { setTab('pendientes'); cargarPendientes() }}
+          className={
+            tab === 'pendientes'
+              ? 'filtro-activo'
+              : 'filtro-btn'
+          }
+          onClick={() => setTab('pendientes')}
         >
-          ⏳ Pendientes {pendientes.length > 0 && `(${pendientes.length})`}
+          ⏳ Pendientes ({pendientes.length})
         </button>
       </div>
 
@@ -221,29 +360,43 @@ function Desafios() {
             <input
               className="input-field"
               type="text"
-              placeholder="Buscar jugador por nombre..."
+              placeholder="Buscar jugador..."
               value={busqueda}
-              onChange={e => setBusqueda(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && buscarUsuario()}
+              onChange={e =>
+                setBusqueda(e.target.value)
+              }
             />
-            <button className="btn-primary" onClick={buscarUsuario}>
+
+            <button
+              className="btn-primary"
+              onClick={buscarUsuario}
+            >
               {cargando ? '...' : 'Buscar'}
             </button>
           </div>
 
-          {resultados.length === 0 && busqueda && !cargando && (
-            <p className="tagline">No se encontraron jugadores con ese nombre</p>
-          )}
-
           <div className="resultados-lista">
             {resultados.map(u => (
-              <div key={u.id} className="rival-card">
+              <div
+                key={u.id}
+                className="rival-card"
+              >
                 <div className="rival-info">
-                  <span className="rival-nombre">🗣️ {u.nombre}</span>
-                  <span className="rival-rango">{u.rango}</span>
+                  <span className="rival-nombre">
+                    🗣️ {u.nombre}
+                  </span>
+
+                  <span className="rival-rango">
+                    {u.rango}
+                  </span>
                 </div>
-                <div className="rival-xp">⭐ {u.xp} XP</div>
-                <button className="btn-retar" onClick={() => enviarDesafio(u.id)}>
+
+                <button
+                  className="btn-retar"
+                  onClick={() =>
+                    enviarDesafio(u.id)
+                  }
+                >
                   ⚔️ Retar
                 </button>
               </div>
@@ -255,17 +408,31 @@ function Desafios() {
       {tab === 'pendientes' && (
         <div className="pendientes-lista">
           {pendientes.length === 0 && (
-            <p className="tagline">No tienes desafíos pendientes</p>
+            <p className="tagline">
+              No tienes desafíos pendientes
+            </p>
           )}
+
           {pendientes.map(d => (
-            <div key={d.id} className="rival-card">
+            <div
+              key={d.id}
+              className="rival-card"
+            >
               <div className="rival-info">
                 <span className="rival-nombre">
-                  {d.retador_nombre} retó a {d.retado_nombre}
+                  {d.retador_nombre} retó a{' '}
+                  {d.retado_nombre}
                 </span>
-                <span className="rival-rango">{d.idioma}</span>
+
+                <span className="rival-rango">
+                  {d.idioma}
+                </span>
               </div>
-              <button className="btn-retar" onClick={() => iniciarDesafio(d)}>
+
+              <button
+                className="btn-retar"
+                onClick={() => iniciarDesafio(d)}
+              >
                 ▶️ Jugar
               </button>
             </div>
@@ -276,4 +443,4 @@ function Desafios() {
   )
 }
 
-export default Desafios 
+export default Desafios
