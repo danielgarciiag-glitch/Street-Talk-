@@ -74,5 +74,23 @@ router.get('/perfil', verificarToken, async (req, res) => {
     res.status(500).json({ error: 'Error obteniendo perfil' })
   }
 })
+router.get('/ranking', async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT id, nombre, xp, nivel, racha, victorias, rango
+       FROM usuarios
+       ORDER BY xp DESC
+       LIMIT 20`
+    )
+    res.json({ jugadores: result.rows })
+  } catch (err) {
+    console.error('ERROR RANKING:', err.message)
+    res.status(500).json({ error: err.message })
+  }
+})
+
+
+
+
 
 module.exports = router
