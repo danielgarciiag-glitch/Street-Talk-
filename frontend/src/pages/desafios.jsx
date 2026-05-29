@@ -1,6 +1,5 @@
-/* eslint-disable react-hooks/immutability */
-/* eslint-disable no-unused-vars */
 /* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable react-hooks/set-state-in-effect */
 import { useState, useEffect } from 'react'
 import { useUser } from '../useUser'
 
@@ -35,7 +34,7 @@ const preguntasDesafio = [
 const API = 'https://street-talk-backend.onrender.com'
 
 function Desafios() {
-  
+  useUser()
   const [tab, setTab] = useState('buscar')
   const [busqueda, setBusqueda] = useState('')
   const [resultados, setResultados] = useState([])
@@ -50,10 +49,6 @@ function Desafios() {
 
   const token = localStorage.getItem('token')
 
-  useEffect(() => {
-    cargarPendientes()
-  }, [])
-
   async function cargarPendientes() {
     try {
       const res = await fetch(`${API}/desafios/pendientes`, {
@@ -65,6 +60,10 @@ function Desafios() {
       console.error(err)
     }
   }
+
+  useEffect(() => {
+    cargarPendientes()
+  }, [])
 
   async function buscarUsuario() {
     if (!busqueda.trim()) return
@@ -95,7 +94,7 @@ function Desafios() {
       if (data.error) {
         setMensaje('⚠️ ' + data.error)
       } else {
-        setMensaje('✅ ¡Desafío enviado!')
+        setMensaje('✅ Desafío enviado!')
         setResultados([])
         setBusqueda('')
       }
@@ -144,13 +143,12 @@ function Desafios() {
     }, 1200)
   }
 
-  // PANTALLA DE JUEGO
   if (desafioActivo && !terminado) {
     const pregunta = preguntasDesafio[indice]
     return (
       <div className="container">
         <h1 className="logo">⚔️ Desafío</h1>
-        <p className="tagline">vs {desafioActivo.retador_nombre || desafioActivo.retado_nombre}</p>
+        <p className="tagline">Pregunta {indice + 1} de {preguntasDesafio.length}</p>
         <div className="arena-card">
           <div className="arena-progreso">
             <span>Pregunta {indice + 1} de {preguntasDesafio.length}</span>
@@ -177,15 +175,14 @@ function Desafios() {
     )
   }
 
-  // PANTALLA DE RESULTADO
   if (desafioActivo && terminado) {
     return (
       <div className="container">
         <h1 className="logo">⚔️ Resultado</h1>
         <div className="resultado-card">
-          <p className="resultado-emoji">{puntaje >= 4 ? "🏆" : puntaje >= 3 ? "💪" : "😅"}</p>
+          <p className="resultado-emoji">{puntaje >= 4 ? '🏆' : puntaje >= 3 ? '💪' : '😅'}</p>
           <h2 className="resultado-titulo">
-            {puntaje >= 4 ? "¡Dominaste!" : puntaje >= 3 ? "¡Buen duelo!" : "¡Sigue entrenando!"}
+            {puntaje >= 4 ? '¡Dominaste!' : puntaje >= 3 ? '¡Buen duelo!' : '¡Sigue entrenando!'}
           </h2>
           <p className="resultado-puntaje">{puntaje} / {preguntasDesafio.length} correctas</p>
           <button className="btn-primary" onClick={() => setDesafioActivo(null)}>
@@ -264,9 +261,7 @@ function Desafios() {
             <div key={d.id} className="rival-card">
               <div className="rival-info">
                 <span className="rival-nombre">
-                  {d.retador_id === parseInt(localStorage.getItem('usuarioId'))
-                    ? `Retaste a ${d.retado_nombre}`
-                    : `${d.retador_nombre} te retó`}
+                  {d.retador_nombre} retó a {d.retado_nombre}
                 </span>
                 <span className="rival-rango">{d.idioma}</span>
               </div>
@@ -281,4 +276,4 @@ function Desafios() {
   )
 }
 
-export default Desafios
+export default Desafios 
