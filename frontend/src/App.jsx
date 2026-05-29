@@ -1,5 +1,6 @@
+/* eslint-disable react-hooks/set-state-in-effect */
+/* eslint-disable no-unused-vars */
 import { useState, useEffect } from 'react'
-// eslint-disable-next-line no-unused-vars
 import { BrowserRouter, Routes, Route, Link, Navigate } from 'react-router-dom'
 import Home from './pages/Home'
 import Arena from './pages/Arena'
@@ -7,6 +8,7 @@ import Lecciones from './pages/Lecciones'
 import Perfil from './pages/Perfil'
 import Ranking from './pages/Ranking'
 import Login from './pages/Login'
+import Desafios from './pages/Desafios'
 import './App.css'
 
 function App() {
@@ -14,7 +16,6 @@ function App() {
 
   useEffect(() => {
     const guardado = localStorage.getItem('usuario')
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (guardado) setUsuarioActivo(JSON.parse(guardado))
   }, [])
 
@@ -38,6 +39,7 @@ function App() {
         <Link to="/">🗣️ Street Talk</Link>
         <Link to="/lecciones">📚 Lecciones</Link>
         <Link to="/arena">⚔️ Arena</Link>
+        <Link to="/desafios">🥊 Desafíos</Link>
         <Link to="/ranking">🏆 Ranking</Link>
         <Link to="/perfil">👤 Perfil</Link>
         <button className="btn-logout" onClick={handleLogout}>Salir</button>
@@ -47,6 +49,7 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/lecciones" element={<Lecciones />} />
         <Route path="/arena" element={<Arena />} />
+        <Route path="/desafios" element={<Desafios />} />
         <Route path="/ranking" element={<Ranking />} />
         <Route path="/perfil" element={<Perfil />} />
       </Routes>
