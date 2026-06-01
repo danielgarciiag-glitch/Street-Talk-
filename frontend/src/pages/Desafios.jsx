@@ -252,26 +252,7 @@ function Desafios() {
         </div>
       )}
 
-      {tab === 'pendientes' && (
-        <div className="pendientes-lista">
-          {pendientes.length === 0 && (
-            <p className="tagline">No tienes desafíos pendientes</p>
-          )}
-          {pendientes.map(d => (
-            <div key={d.id} className="rival-card">
-              <div className="rival-info">
-                <span className="rival-nombre">
-                  {d.retador_nombre} retó a {d.retado_nombre}
-                </span>
-                <span className="rival-rango">{d.idioma}</span>
-              </div>
-              <button className="btn-retar" onClick={() => iniciarDesafio(d)}>
-                ▶️ Jugar
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
+      
     </div>
   )
 }
