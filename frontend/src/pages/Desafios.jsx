@@ -63,6 +63,7 @@ function Desafios() {
 
   useEffect(() => {
     cargarPendientes()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   async function buscarUsuario() {
@@ -220,8 +221,9 @@ function Desafios() {
 
 
 })}{pendientes.map(d => {
-  const soyRetado = d.retado_id === JSON.parse(atob(token.split('.')[1])).id
-  const soyRetador = d.retador_id === JSON.parse(atob(token.split('.')[1])).id
+  const miId = JSON.parse(atob(token.split('.')[1])).id
+const soyRetado = Number(d.retado_id) === Number(miId)
+const soyRetador = Number(d.retador_id) === Number(miId)
 
   return (
     <div key={d.id} className="rival-card">
