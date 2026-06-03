@@ -193,27 +193,57 @@ function Desafios() {
     )
   }
 
+    {pendientes.map(d => {
+  const soyRetado = d.retado_id === JSON.parse(atob(token.split('.')[1])).id
+  const soyRetador = d.retador_id === JSON.parse(atob(token.split('.')[1])).id
+
   return (
-    <div className="container">
-      <h1 className="logo">⚔️ Desafíos</h1>
-      <p className="tagline">Reta a otros jugadores y demuestra quién habla mejor</p>
-
-      {mensaje && <div className="desafio-mensaje">{mensaje}</div>}
-
-      <div className="desafio-tabs">
-        <button
-          className={tab === 'buscar' ? 'filtro-activo' : 'filtro-btn'}
-          onClick={() => setTab('buscar')}
-        >
-          🔍 Buscar rival
-        </button>
-        <button
-          className={tab === 'pendientes' ? 'filtro-activo' : 'filtro-btn'}
-          onClick={() => { setTab('pendientes'); cargarPendientes() }}
-        >
-          ⏳ Pendientes {pendientes.length > 0 && `(${pendientes.length})`}
-        </button>
+    <div key={d.id} className="rival-card">
+      <div className="rival-info">
+        <span className="rival-nombre">
+          {soyRetado
+            ? `⚔️ ${d.retador_nombre} te retó`
+            : `⏳ Retaste a ${d.retado_nombre}`}
+        </span>
+        <span className="rival-rango">{d.idioma}</span>
       </div>
+      {soyRetado && (
+        <button className="btn-retar" onClick={() => iniciarDesafio(d)}>
+          ▶️ Jugar
+        </button>
+      )}
+      {soyRetador && (
+        <span style={{ color: '#aaa', fontSize: '0.85rem' }}>⏳ Esperando respuesta</span>
+      )}
+    </div>
+  )
+
+
+})}{pendientes.map(d => {
+  const soyRetado = d.retado_id === JSON.parse(atob(token.split('.')[1])).id
+  const soyRetador = d.retador_id === JSON.parse(atob(token.split('.')[1])).id
+
+  return (
+    <div key={d.id} className="rival-card">
+      <div className="rival-info">
+        <span className="rival-nombre">
+          {soyRetado
+            ? `⚔️ ${d.retador_nombre} te retó`
+            : `⏳ Retaste a ${d.retado_nombre}`}
+        </span>
+        <span className="rival-rango">{d.idioma}</span>
+      </div>
+      {soyRetado && (
+        <button className="btn-retar" onClick={() => iniciarDesafio(d)}>
+          ▶️ Jugar
+        </button>
+      )}
+      {soyRetador && (
+        <span style={{ color: '#aaa', fontSize: '0.85rem' }}>⏳ Esperando respuesta</span>
+      )}
+    </div>
+  )
+})}
 
       {tab === 'buscar' && (
         <div className="desafio-buscar">
@@ -253,8 +283,8 @@ function Desafios() {
       )}
 
       
-    </div>
-  )
+    
+  
 }
 
 export default Desafios
