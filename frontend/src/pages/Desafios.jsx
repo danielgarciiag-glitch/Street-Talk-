@@ -1,6 +1,6 @@
-/* eslint-disable react-hooks/set-state-in-effect */
+/* eslint-disable react-hooks/immutability */
 /* eslint-disable no-unused-vars */
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { useUser } from '../useUser'
 
 const preguntasDesafio = [
@@ -34,7 +34,7 @@ const preguntasDesafio = [
 const API = 'https://street-talk-backend.onrender.com'
 
 function Desafios() {
-  useUser()
+  const { usuario } = useUser()
   const [tab, setTab] = useState('buscar')
   const [busqueda, setBusqueda] = useState('')
   const [resultados, setResultados] = useState([])
@@ -49,6 +49,10 @@ function Desafios() {
 
   const token = localStorage.getItem('token')
 
+  useEffect(() => {
+    cargarPendientes()
+  }, [])
+
   async function cargarPendientes() {
     try {
       const res = await fetch(`${API}/desafios/pendientes`, {
@@ -60,11 +64,6 @@ function Desafios() {
       console.error(err)
     }
   }
-
-  useEffect(() => {
-    cargarPendientes()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
 
   async function buscarUsuario() {
     if (!busqueda.trim()) return
@@ -95,7 +94,7 @@ function Desafios() {
       if (data.error) {
         setMensaje('⚠️ ' + data.error)
       } else {
-        setMensaje('✅ Desafío enviado!')
+        setMensaje('✅ ¡Desafío enviado!')
         setResultados([])
         setBusqueda('')
       }
@@ -144,12 +143,13 @@ function Desafios() {
     }, 1200)
   }
 
+  // PANTALLA DE JUEGO
   if (desafioActivo && !terminado) {
     const pregunta = preguntasDesafio[indice]
     return (
       <div className="container">
         <h1 className="logo">⚔️ Desafío</h1>
-        <p className="tagline">Pregunta {indice + 1} de {preguntasDesafio.length}</p>
+        <p className="tagline">vs {desafioActivo.retador_nombre || desafioActivo.retado_nombre}</p>
         <div className="arena-card">
           <div className="arena-progreso">
             <span>Pregunta {indice + 1} de {preguntasDesafio.length}</span>
@@ -176,14 +176,15 @@ function Desafios() {
     )
   }
 
+  // PANTALLA DE RESULTADO
   if (desafioActivo && terminado) {
     return (
       <div className="container">
         <h1 className="logo">⚔️ Resultado</h1>
         <div className="resultado-card">
-          <p className="resultado-emoji">{puntaje >= 4 ? '🏆' : puntaje >= 3 ? '💪' : '😅'}</p>
+          <p className="resultado-emoji">{puntaje >= 4 ? "🏆" : puntaje >= 3 ? "💪" : "😅"}</p>
           <h2 className="resultado-titulo">
-            {puntaje >= 4 ? '¡Dominaste!' : puntaje >= 3 ? '¡Buen duelo!' : '¡Sigue entrenando!'}
+            {puntaje >= 4 ? "¡Dominaste!" : puntaje >= 3 ? "¡Buen duelo!" : "¡Sigue entrenando!"}
           </h2>
           <p className="resultado-puntaje">{puntaje} / {preguntasDesafio.length} correctas</p>
           <button className="btn-primary" onClick={() => setDesafioActivo(null)}>
@@ -194,58 +195,27 @@ function Desafios() {
     )
   }
 
-    {pendientes.map(d => {
-  const soyRetado = d.retado_id === JSON.parse(atob(token.split('.')[1])).id
-  const soyRetador = d.retador_id === JSON.parse(atob(token.split('.')[1])).id
-
   return (
-    <div key={d.id} className="rival-card">
-      <div className="rival-info">
-        <span className="rival-nombre">
-          {soyRetado
-            ? `⚔️ ${d.retador_nombre} te retó`
-            : `⏳ Retaste a ${d.retado_nombre}`}
-        </span>
-        <span className="rival-rango">{d.idioma}</span>
-      </div>
-      {soyRetado && (
-        <button className="btn-retar" onClick={() => iniciarDesafio(d)}>
-          ▶️ Jugar
+    <div className="container">
+      <h1 className="logo">⚔️ Desafíos</h1>
+      <p className="tagline">Reta a otros jugadores y demuestra quién habla mejor</p>
+
+      {mensaje && <div className="desafio-mensaje">{mensaje}</div>}
+
+      <div className="desafio-tabs">
+        <button
+          className={tab === 'buscar' ? 'filtro-activo' : 'filtro-btn'}
+          onClick={() => setTab('buscar')}
+        >
+          🔍 Buscar rival
         </button>
-      )}
-      {soyRetador && (
-        <span style={{ color: '#aaa', fontSize: '0.85rem' }}>⏳ Esperando respuesta</span>
-      )}
-    </div>
-  )
-
-
-})}{pendientes.map(d => {
-  const miId = JSON.parse(atob(token.split('.')[1])).id
-const soyRetado = Number(d.retado_id) === Number(miId)
-const soyRetador = Number(d.retador_id) === Number(miId)
-
-  return (
-    <div key={d.id} className="rival-card">
-      <div className="rival-info">
-        <span className="rival-nombre">
-          {soyRetado
-            ? `⚔️ ${d.retador_nombre} te retó`
-            : `⏳ Retaste a ${d.retado_nombre}`}
-        </span>
-        <span className="rival-rango">{d.idioma}</span>
-      </div>
-      {soyRetado && (
-        <button className="btn-retar" onClick={() => iniciarDesafio(d)}>
-          ▶️ Jugar
+        <button
+          className={tab === 'pendientes' ? 'filtro-activo' : 'filtro-btn'}
+          onClick={() => { setTab('pendientes'); cargarPendientes() }}
+        >
+          ⏳ Pendientes {pendientes.length > 0 && `(${pendientes.length})`}
         </button>
-      )}
-      {soyRetador && (
-        <span style={{ color: '#aaa', fontSize: '0.85rem' }}>⏳ Esperando respuesta</span>
-      )}
-    </div>
-  )
-})}
+      </div>
 
       {tab === 'buscar' && (
         <div className="desafio-buscar">
@@ -284,9 +254,30 @@ const soyRetador = Number(d.retador_id) === Number(miId)
         </div>
       )}
 
-      
-    
-  
+      {tab === 'pendientes' && (
+        <div className="pendientes-lista">
+          {pendientes.length === 0 && (
+            <p className="tagline">No tienes desafíos pendientes</p>
+          )}
+          {pendientes.map(d => (
+            <div key={d.id} className="rival-card">
+              <div className="rival-info">
+                <span className="rival-nombre">
+                  {d.retador_id === parseInt(localStorage.getItem('usuarioId'))
+                    ? `Retaste a ${d.retado_nombre}`
+                    : `${d.retador_nombre} te retó`}
+                </span>
+                <span className="rival-rango">{d.idioma}</span>
+              </div>
+              <button className="btn-retar" onClick={() => iniciarDesafio(d)}>
+                ▶️ Jugar
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
 }
 
 export default Desafios
