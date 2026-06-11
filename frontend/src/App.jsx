@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 /* eslint-disable no-unused-vars */
 import { useState, useEffect } from 'react'
-import { BrowserRouter, Routes, Route, Link, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Link } from 'react-router-dom'
 import Home from './pages/Home'
 import Arena from './pages/Arena'
 import Lecciones from './pages/Lecciones'
@@ -10,6 +10,8 @@ import Ranking from './pages/Ranking'
 import Login from './pages/Login'
 import Desafios from './pages/Desafios'
 import Amigos from './pages/Amigos'
+import Chat from './pages/Chat'
+import Torneos from './pages/Torneos'
 import './App.css'
 
 function App() {
@@ -37,13 +39,15 @@ function App() {
   return (
     <BrowserRouter>
       <nav className="navbar">
-        <Link to="/">🗣️ Street Talk</Link>
-        <Link to="/lecciones">📚 Lecciones</Link>
-        <Link to="/arena">⚔️ Arena</Link>
-        <Link to="/desafios">🥊 Desafíos</Link>
-        <Link to="/ranking">🏆 Ranking</Link>
-        <Link to="/amigos">👥 Amigos</Link>
-        <Link to="/perfil">👤 Perfil</Link>
+        <Link to="/">🗣️</Link>
+        <Link to="/lecciones">📚</Link>
+        <Link to="/arena">⚔️</Link>
+        <Link to="/desafios">🥊</Link>
+        <Link to="/torneos">🏆</Link>
+        <Link to="/ranking">📊</Link>
+        <Link to="/amigos">👥</Link>
+        <Link to="/chat">💬</Link>
+        <Link to="/perfil">👤</Link>
         <button className="btn-logout" onClick={handleLogout}>Salir</button>
       </nav>
 
@@ -52,8 +56,10 @@ function App() {
         <Route path="/lecciones" element={<Lecciones />} />
         <Route path="/arena" element={<Arena />} />
         <Route path="/desafios" element={<Desafios />} />
+        <Route path="/torneos" element={<Torneos />} />
         <Route path="/ranking" element={<Ranking />} />
         <Route path="/amigos" element={<Amigos />} />
+        <Route path="/chat" element={<Chat />} />
         <Route path="/perfil" element={<Perfil />} />
       </Routes>
     </BrowserRouter>
