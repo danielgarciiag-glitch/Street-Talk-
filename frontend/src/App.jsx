@@ -9,6 +9,7 @@ import Perfil from './pages/Perfil'
 import Ranking from './pages/Ranking'
 import Login from './pages/Login'
 import Desafios from './pages/Desafios'
+import Amigos from './pages/Amigos'
 import './App.css'
 
 function App() {
@@ -41,6 +42,7 @@ function App() {
         <Link to="/arena">⚔️ Arena</Link>
         <Link to="/desafios">🥊 Desafíos</Link>
         <Link to="/ranking">🏆 Ranking</Link>
+        <Link to="/amigos">👥 Amigos</Link>
         <Link to="/perfil">👤 Perfil</Link>
         <button className="btn-logout" onClick={handleLogout}>Salir</button>
       </nav>
@@ -51,6 +53,7 @@ function App() {
         <Route path="/arena" element={<Arena />} />
         <Route path="/desafios" element={<Desafios />} />
         <Route path="/ranking" element={<Ranking />} />
+        <Route path="/amigos" element={<Amigos />} />
         <Route path="/perfil" element={<Perfil />} />
       </Routes>
     </BrowserRouter>

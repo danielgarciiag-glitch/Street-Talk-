@@ -19,10 +19,12 @@ app.use(express.json())
 const authRoutes = require('./routes/auth')
 const usuarioRoutes = require('./routes/usuario')
 const desafiosRoutes = require('./routes/desafios')
+const amigosRoutes = require('./routes/amigos')
 
 app.use('/auth', authRoutes)
 app.use('/usuario', usuarioRoutes)
 app.use('/desafios', desafiosRoutes)
+app.use('/amigos', amigosRoutes)
 
 app.get('/', (req, res) => {
   res.json({ mensaje: '🗣️ Street Talk API funcionando!' })
