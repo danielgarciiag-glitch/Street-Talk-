@@ -1,6 +1,5 @@
-/* eslint-disable no-undef */
-/* eslint-disable react-hooks/set-state-in-effect */
 /* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable react-hooks/set-state-in-effect */
 /* eslint-disable no-unused-vars */
 import { useState, useEffect, useRef } from 'react'
 
@@ -11,14 +10,10 @@ function Chat({ amigoSeleccionado, setAmigoSeleccionado }) {
   const [conversaciones, setConversaciones] = useState([])
   const [nuevoMensaje, setNuevoMensaje] = useState('')
   const token = localStorage.getItem('token')
-  
-  // Obtenemos tu propio ID de usuario para saber de qué lado pintar los mensajes
   const usuarioGuardado = localStorage.getItem('usuario')
   const miUsuario = usuarioGuardado ? JSON.parse(usuarioGuardado) : null
-  
   const scrollRef = useRef(null)
 
-  // 1. Cargar lista de conversaciones activas generales
   async function cargarConversaciones() {
     try {
       const res = await fetch(`${API}/chat/conversaciones`, { headers: { authorization: token } })
@@ -27,7 +22,6 @@ function Chat({ amigoSeleccionado, setAmigoSeleccionado }) {
     } catch (err) { console.error(err) }
   }
 
-  // 2. Cargar los mensajes de la conversación que abrimos
   async function cargarMensajes() {
     if (!amigoSeleccionado) return
     try {
@@ -37,30 +31,24 @@ function Chat({ amigoSeleccionado, setAmigoSeleccionado }) {
     } catch (err) { console.error(err) }
   }
 
-  // Controlador de efectos para cargar datos e hilos en tiempo real
   useEffect(() => {
     if (!amigoSeleccionado) {
       cargarConversaciones()
     } else {
       cargarMensajes()
-      // Polling: Actualiza el chat cada 3 segundos de forma automática
       const intervalo = setInterval(cargarMensajes, 3000)
-      return () => clearInterval(interval)
+      return () => clearInterval(intervalo)
     }
   }, [amigoSeleccionado])
 
-  // Desplazar la vista al último mensaje recibido o enviado de forma automática
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight
     }
   }, [mensajes])
 
-  // 3. Enviar mensaje al backend de Render
-  async function enviarMensaje(e) {
-    e.preventDefault()
+  async function enviarMensaje() {
     if (!nuevoMensaje.trim() || !amigoSeleccionado) return
-
     try {
       const res = await fetch(`${API}/chat/enviar`, {
         method: 'POST',
@@ -69,36 +57,34 @@ function Chat({ amigoSeleccionado, setAmigoSeleccionado }) {
       })
       const data = await res.json()
       if (data.mensaje) {
-        setMensajes([...mensajes, data.mensaje])
-        setNuevoMensaje('') // Limpiamos la caja de texto
+        setMensajes(prev => [...prev, data.mensaje])
+        setNuevoMensaje('')
       }
     } catch (err) { console.error(err) }
   }
 
-  // VISTA A: Si no hay ningún chat seleccionado en este instante
   if (!amigoSeleccionado) {
     return (
       <div className="container">
         <h1 className="logo">💬 Mensajes</h1>
         <p className="tagline">Tus conversaciones activas en Street Talk</p>
-
         <div className="pendientes-lista" style={{ marginTop: '20px' }}>
           {conversaciones.length === 0 ? (
             <p className="tagline" style={{ textAlign: 'center', marginTop: '40px' }}>
-              No tienes conversaciones aún. ¡Agrega amigos y escríbeles!
+              No tienes conversaciones aún. ¡Ve a Amigos y escríbeles!
             </p>
           ) : (
             conversaciones.map(c => (
-              <div 
-                key={c.otro_id} 
-                className="rival-card" 
+              <div
+                key={c.otro_id}
+                className="rival-card"
                 onClick={() => setAmigoSeleccionado({ id: c.otro_id, nombre: c.nombre })}
                 style={{ cursor: 'pointer' }}
               >
                 <div className="rival-info">
                   <span className="rival-nombre">🗣️ {c.nombre}</span>
                   <span className="rival-rango" style={{ opacity: 0.7, fontSize: '0.9rem' }}>
-                    {c.ultimo_mensaje || "Dale click para chatear"}
+                    {c.ultimo_mensaje || 'Dale click para chatear'}
                   </span>
                 </div>
                 {c.no_leidos > 0 && (
@@ -114,13 +100,11 @@ function Chat({ amigoSeleccionado, setAmigoSeleccionado }) {
     )
   }
 
-  // VISTA B: Interfaz de la sala de chat activa con tu amigo
   return (
     <div className="container" style={{ display: 'flex', flexDirection: 'column', height: '82vh' }}>
-      {/* Cabecera del chat */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '15px', borderBottom: '1px solid #333', paddingBottom: '10px' }}>
-        <button 
-          className="filtro-btn" 
+        <button
+          className="filtro-btn"
           onClick={() => setAmigoSeleccionado(null)}
           style={{ padding: '5px 12px', fontSize: '0.9rem' }}
         >
@@ -132,17 +116,9 @@ function Chat({ amigoSeleccionado, setAmigoSeleccionado }) {
         </div>
       </div>
 
-      {/* Pantalla de mensajes en scroll */}
-      <div 
+      <div
         ref={scrollRef}
-        style={{ 
-          flex: 1, 
-          overflowY: 'auto', 
-          padding: '15px 5px', 
-          display: 'flex', 
-          flexDirection: 'column', 
-          gap: '12px' 
-        }}
+        style={{ flex: 1, overflowY: 'auto', padding: '15px 5px', display: 'flex', flexDirection: 'column', gap: '12px' }}
       >
         {mensajes.length === 0 ? (
           <p className="tagline" style={{ textAlign: 'center', marginTop: '30px' }}>
@@ -152,9 +128,9 @@ function Chat({ amigoSeleccionado, setAmigoSeleccionado }) {
           mensajes.map(m => {
             const esMio = miUsuario && m.remitente_id === miUsuario.id
             return (
-              <div 
-                key={m.id} 
-                style={{ 
+              <div
+                key={m.id}
+                style={{
                   alignSelf: esMio ? 'flex-end' : 'flex-start',
                   backgroundColor: esMio ? '#ffcc00' : '#222',
                   color: esMio ? '#000' : '#fff',
@@ -166,27 +142,27 @@ function Chat({ amigoSeleccionado, setAmigoSeleccionado }) {
                 }}
               >
                 {!esMio && <div style={{ fontSize: '0.7rem', opacity: 0.6, marginBottom: '2px', fontWeight: 'bold' }}>{m.remitente_nombre}</div>}
-                <div style={{ fontSize: '0.95rem', fontWeight: esMio ? '500' : 'normal' }}>{m.contenido}</div>
+                <div style={{ fontSize: '0.95rem' }}>{m.contenido}</div>
               </div>
             )
           })
         )}
       </div>
 
-      {/* Entrada del mensaje inferior */}
-      <form onSubmit={enviarMensaje} className="buscar-input-group" style={{ marginTop: 'auto', paddingTop: '10px' }}>
+      <div className="buscar-input-group" style={{ marginTop: 'auto', paddingTop: '10px' }}>
         <input
           className="input-field"
           type="text"
-          placeholder="Escribe un mensaje informal..."
+          placeholder="Escribe un mensaje..."
           value={nuevoMensaje}
           onChange={e => setNuevoMensaje(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && enviarMensaje()}
           style={{ flex: 1 }}
         />
-        <button className="btn-primary" type="submit">
+        <button className="btn-primary" onClick={enviarMensaje}>
           Enviar
         </button>
-      </form>
+      </div>
     </div>
   )
 }
