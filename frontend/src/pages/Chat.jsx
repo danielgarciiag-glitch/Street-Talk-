@@ -1,19 +1,24 @@
-/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable no-undef */
 /* eslint-disable react-hooks/set-state-in-effect */
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable no-unused-vars */
 import { useState, useEffect, useRef } from 'react'
 
 const API = 'https://street-talk-backend.onrender.com'
 
-function Chat() {
-  const [conversaciones, setConversaciones] = useState([])
-  const [chatActivo, setChatActivo] = useState(null)
+function Chat({ amigoSeleccionado, setAmigoSeleccionado }) {
   const [mensajes, setMensajes] = useState([])
-  const [texto, setTexto] = useState('')
-  const [cargando, setCargando] = useState(false)
+  const [conversaciones, setConversaciones] = useState([])
+  const [nuevoMensaje, setNuevoMensaje] = useState('')
   const token = localStorage.getItem('token')
-  const miId = JSON.parse(atob(token.split('.')[1])).id
-  const bottomRef = useRef(null)
+  
+  // Obtenemos tu propio ID de usuario para saber de qué lado pintar los mensajes
+  const usuarioGuardado = localStorage.getItem('usuario')
+  const miUsuario = usuarioGuardado ? JSON.parse(usuarioGuardado) : null
+  
+  const scrollRef = useRef(null)
 
+  // 1. Cargar lista de conversaciones activas generales
   async function cargarConversaciones() {
     try {
       const res = await fetch(`${API}/chat/conversaciones`, { headers: { authorization: token } })
@@ -22,109 +27,166 @@ function Chat() {
     } catch (err) { console.error(err) }
   }
 
-  async function abrirChat(otro) {
-    setChatActivo(otro)
-    setCargando(true)
+  // 2. Cargar los mensajes de la conversación que abrimos
+  async function cargarMensajes() {
+    if (!amigoSeleccionado) return
     try {
-      const res = await fetch(`${API}/chat/conversacion/${otro.otro_id}`, { headers: { authorization: token } })
-      const data = await res.json()
-      if (data.mensajes) setMensajes(data.mensajes)
-    } catch (err) { console.error(err) }
-    setCargando(false)
-  }
-
-  async function enviarMensaje() {
-    if (!texto.trim() || !chatActivo) return
-    try {
-      await fetch(`${API}/chat/enviar`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', authorization: token },
-        body: JSON.stringify({ receptor_id: chatActivo.otro_id, contenido: texto })
-      })
-      setTexto('')
-      const res = await fetch(`${API}/chat/conversacion/${chatActivo.otro_id}`, { headers: { authorization: token } })
+      const res = await fetch(`${API}/chat/conversacion/${amigoSeleccionado.id}`, { headers: { authorization: token } })
       const data = await res.json()
       if (data.mensajes) setMensajes(data.mensajes)
     } catch (err) { console.error(err) }
   }
 
+  // Controlador de efectos para cargar datos e hilos en tiempo real
   useEffect(() => {
-    cargarConversaciones()
-    const intervalo = setInterval(cargarConversaciones, 5000)
-    return () => clearInterval(intervalo)
-  }, [])
-
-  useEffect(() => {
-    if (chatActivo) {
-      const intervalo = setInterval(() => abrirChat(chatActivo), 3000)
-      return () => clearInterval(intervalo)
+    if (!amigoSeleccionado) {
+      cargarConversaciones()
+    } else {
+      cargarMensajes()
+      // Polling: Actualiza el chat cada 3 segundos de forma automática
+      const intervalo = setInterval(cargarMensajes, 3000)
+      return () => clearInterval(interval)
     }
-  }, [chatActivo])
+  }, [amigoSeleccionado])
 
+  // Desplazar la vista al último mensaje recibido o enviado de forma automática
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+    }
   }, [mensajes])
 
-  return (
-    <div className="container">
-      <h1 className="logo">💬 Chat</h1>
-      <p className="tagline">Habla con tus amigos</p>
+  // 3. Enviar mensaje al backend de Render
+  async function enviarMensaje(e) {
+    e.preventDefault()
+    if (!nuevoMensaje.trim() || !amigoSeleccionado) return
 
-      {!chatActivo ? (
-        <div className="pendientes-lista">
-          {conversaciones.length === 0 && (
-            <p className="tagline">No tienes conversaciones aún. ¡Agrega amigos y escríbeles!</p>
-          )}
-          {conversaciones.map(c => (
-            <div key={c.otro_id} className="rival-card" style={{ cursor: 'pointer' }} onClick={() => abrirChat(c)}>
-              <div className="rival-info">
-                <span className="rival-nombre">🗣️ {c.nombre}</span>
-                <span className="rival-rango" style={{ fontSize: '0.8rem', color: '#aaa' }}>
-                  {c.ultimo_mensaje?.substring(0, 30)}...
-                </span>
-              </div>
-              {c.no_leidos > 0 && (
-                <span style={{ background: '#6c63ff', color: 'white', borderRadius: '50%', padding: '2px 8px', fontSize: '0.8rem' }}>
-                  {c.no_leidos}
-                </span>
-              )}
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="chat-container">
-          <div className="chat-header">
-            <button className="filtro-btn" onClick={() => { setChatActivo(null); cargarConversaciones() }}>← Volver</button>
-            <span className="rival-nombre">💬 {chatActivo.nombre}</span>
-          </div>
+    try {
+      const res = await fetch(`${API}/chat/enviar`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', authorization: token },
+        body: JSON.stringify({ receptor_id: amigoSeleccionado.id, contenido: nuevoMensaje.trim() })
+      })
+      const data = await res.json()
+      if (data.mensaje) {
+        setMensajes([...mensajes, data.mensaje])
+        setNuevoMensaje('') // Limpiamos la caja de texto
+      }
+    } catch (err) { console.error(err) }
+  }
 
-          <div className="chat-mensajes">
-            {cargando && <p className="tagline">Cargando...</p>}
-            {mensajes.map(m => (
-              <div
-                key={m.id}
-                className={`chat-burbuja ${m.remitente_id === miId ? 'mio' : 'suyo'}`}
+  // VISTA A: Si no hay ningún chat seleccionado en este instante
+  if (!amigoSeleccionado) {
+    return (
+      <div className="container">
+        <h1 className="logo">💬 Mensajes</h1>
+        <p className="tagline">Tus conversaciones activas en Street Talk</p>
+
+        <div className="pendientes-lista" style={{ marginTop: '20px' }}>
+          {conversaciones.length === 0 ? (
+            <p className="tagline" style={{ textAlign: 'center', marginTop: '40px' }}>
+              No tienes conversaciones aún. ¡Agrega amigos y escríbeles!
+            </p>
+          ) : (
+            conversaciones.map(c => (
+              <div 
+                key={c.otro_id} 
+                className="rival-card" 
+                onClick={() => setAmigoSeleccionado({ id: c.otro_id, nombre: c.nombre })}
+                style={{ cursor: 'pointer' }}
               >
-                <span>{m.contenido}</span>
-                <small>{new Date(m.creado_en).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</small>
+                <div className="rival-info">
+                  <span className="rival-nombre">🗣️ {c.nombre}</span>
+                  <span className="rival-rango" style={{ opacity: 0.7, fontSize: '0.9rem' }}>
+                    {c.ultimo_mensaje || "Dale click para chatear"}
+                  </span>
+                </div>
+                {c.no_leidos > 0 && (
+                  <span style={{ backgroundColor: '#ffcc00', color: '#000', padding: '2px 8px', borderRadius: '50%', fontWeight: 'bold', fontSize: '0.8rem' }}>
+                    {c.no_leidos}
+                  </span>
+                )}
               </div>
-            ))}
-            <div ref={bottomRef} />
-          </div>
-
-          <div className="chat-input-group">
-            <input
-              className="input-field"
-              type="text"
-              placeholder="Escribe un mensaje..."
-              value={texto}
-              onChange={e => setTexto(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && enviarMensaje()}
-            />
-            <button className="btn-primary" onClick={enviarMensaje}>Enviar</button>
-          </div>
+            ))
+          )}
         </div>
-      )}
+      </div>
+    )
+  }
+
+  // VISTA B: Interfaz de la sala de chat activa con tu amigo
+  return (
+    <div className="container" style={{ display: 'flex', flexDirection: 'column', height: '82vh' }}>
+      {/* Cabecera del chat */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '15px', borderBottom: '1px solid #333', paddingBottom: '10px' }}>
+        <button 
+          className="filtro-btn" 
+          onClick={() => setAmigoSeleccionado(null)}
+          style={{ padding: '5px 12px', fontSize: '0.9rem' }}
+        >
+          ⬅️ Volver
+        </button>
+        <div>
+          <h2 style={{ margin: 0, fontSize: '1.4rem', color: '#fff' }}>🗣️ {amigoSeleccionado.nombre}</h2>
+          <p className="tagline" style={{ margin: 0, fontSize: '0.8rem' }}>En línea (Street Talk Live)</p>
+        </div>
+      </div>
+
+      {/* Pantalla de mensajes en scroll */}
+      <div 
+        ref={scrollRef}
+        style={{ 
+          flex: 1, 
+          overflowY: 'auto', 
+          padding: '15px 5px', 
+          display: 'flex', 
+          flexDirection: 'column', 
+          gap: '12px' 
+        }}
+      >
+        {mensajes.length === 0 ? (
+          <p className="tagline" style={{ textAlign: 'center', marginTop: '30px' }}>
+            No hay mensajes previos. ¡Rompe el hielo con algo de jerga!
+          </p>
+        ) : (
+          mensajes.map(m => {
+            const esMio = miUsuario && m.remitente_id === miUsuario.id
+            return (
+              <div 
+                key={m.id} 
+                style={{ 
+                  alignSelf: esMio ? 'flex-end' : 'flex-start',
+                  backgroundColor: esMio ? '#ffcc00' : '#222',
+                  color: esMio ? '#000' : '#fff',
+                  padding: '10px 15px',
+                  borderRadius: esMio ? '16px 16px 0 16px' : '16px 16px 16px 0',
+                  maxWidth: '75%',
+                  wordBreak: 'break-word',
+                  boxShadow: '0 2px 5px rgba(0,0,0,0.15)'
+                }}
+              >
+                {!esMio && <div style={{ fontSize: '0.7rem', opacity: 0.6, marginBottom: '2px', fontWeight: 'bold' }}>{m.remitente_nombre}</div>}
+                <div style={{ fontSize: '0.95rem', fontWeight: esMio ? '500' : 'normal' }}>{m.contenido}</div>
+              </div>
+            )
+          })
+        )}
+      </div>
+
+      {/* Entrada del mensaje inferior */}
+      <form onSubmit={enviarMensaje} className="buscar-input-group" style={{ marginTop: 'auto', paddingTop: '10px' }}>
+        <input
+          className="input-field"
+          type="text"
+          placeholder="Escribe un mensaje informal..."
+          value={nuevoMensaje}
+          onChange={e => setNuevoMensaje(e.target.value)}
+          style={{ flex: 1 }}
+        />
+        <button className="btn-primary" type="submit">
+          Enviar
+        </button>
+      </form>
     </div>
   )
 }

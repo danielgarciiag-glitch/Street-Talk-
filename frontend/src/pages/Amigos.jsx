@@ -1,10 +1,12 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable react-hooks/set-state-in-effect */
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom' // 👈 Importamos la navegación
 
 const API = 'https://street-talk-backend.onrender.com'
 
-function Amigos() {
+function Amigos({ setAmigoSeleccionado }) { // 👈 Recibimos el puente de App.jsx
+  const navigate = useNavigate() // 👈 Inicializamos el navegador interno
   const [tab, setTab] = useState('amigos')
   const [amigos, setAmigos] = useState([])
   const [solicitudes, setSolicitudes] = useState([])
@@ -75,6 +77,12 @@ function Amigos() {
     setTimeout(() => setMensaje(''), 3000)
   }
 
+  // 🌉 FUNCIÓN MÁGICA DEL PUENTE
+  function abrirChatConAmigo(amigo) {
+    setAmigoSeleccionado({ id: amigo.id, nombre: amigo.nombre }) // Guardamos sus datos globalmente
+    navigate('/chat') // Redirigimos de inmediato al chat
+  }
+
   return (
     <div className="container">
       <h1 className="logo">👥 Amigos</h1>
@@ -98,12 +106,21 @@ function Amigos() {
         <div className="pendientes-lista">
           {amigos.length === 0 && <p className="tagline">Aún no tienes amigos agregados</p>}
           {amigos.map(a => (
-            <div key={a.id} className="rival-card">
+            <div 
+              key={a.id} 
+              className="rival-card" 
+              onClick={() => abrirChatConAmigo(a)} // 👈 Activamos el clic en toda la tarjeta
+              style={{ cursor: 'pointer' }}
+              title="Haz clic para enviarle un mensaje"
+            >
               <div className="rival-info">
                 <span className="rival-nombre">🗣️ {a.nombre}</span>
                 <span className="rival-rango">{a.rango}</span>
               </div>
-              <div className="rival-xp">⭐ {a.xp} XP</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                <div className="rival-xp">⭐ {a.xp} XP</div>
+                <span style={{ fontSize: '1.2rem' }}>💬</span>
+              </div>
             </div>
           ))}
         </div>
@@ -165,4 +182,4 @@ function Amigos() {
   )
 }
 
-export default Amigos 
+export default Amigos

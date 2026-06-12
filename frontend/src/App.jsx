@@ -16,6 +16,9 @@ import './App.css'
 
 function App() {
   const [usuarioActivo, setUsuarioActivo] = useState(null)
+  
+  // 🌉 EL PUENTE: Guardamos el amigo con el que queremos hablar
+  const [amigoSeleccionado, setAmigoSeleccionado] = useState(null)
 
   useEffect(() => {
     const guardado = localStorage.getItem('usuario')
@@ -30,6 +33,7 @@ function App() {
     localStorage.removeItem('token')
     localStorage.removeItem('usuario')
     setUsuarioActivo(null)
+    setAmigoSeleccionado(null) // Limpiamos el chat activo al salir
   }
 
   if (!usuarioActivo) {
@@ -58,8 +62,13 @@ function App() {
         <Route path="/desafios" element={<Desafios />} />
         <Route path="/torneos" element={<Torneos />} />
         <Route path="/ranking" element={<Ranking />} />
-        <Route path="/amigos" element={<Amigos />} />
-        <Route path="/chat" element={<Chat />} />
+        
+        {/* PASAMOS EL PUENTE A AMIGOS PARA QUE PUEDA SELECCIONAR AL USUARIO */}
+        <Route path="/amigos" element={<Amigos setAmigoSeleccionado={setAmigoSeleccionado} />} />
+        
+        {/* PASAMOS EL AMIGO SELECCIONADO AL CHAT PARA QUE SEPA CON QUIÉN HABLAR */}
+        <Route path="/chat" element={<Chat amigoSeleccionado={amigoSeleccionado} setAmigoSeleccionado={setAmigoSeleccionado} />} />
+        
         <Route path="/perfil" element={<Perfil />} />
       </Routes>
     </BrowserRouter>
