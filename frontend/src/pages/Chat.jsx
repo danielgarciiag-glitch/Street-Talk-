@@ -3,7 +3,7 @@
 /* eslint-disable no-unused-vars */
 import { useState, useEffect, useRef } from 'react'
 
-const API = 'https://street-talk-backend.onrender.com'
+const API = 'http://localhost:3000'
 
 function Chat({ amigoSeleccionado, setAmigoSeleccionado }) {
   const [mensajes, setMensajes] = useState([])

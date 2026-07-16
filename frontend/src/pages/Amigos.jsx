@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom' // 👈 Importamos la navegación
 
-const API = 'https://street-talk-backend.onrender.com'
+const API = 'http://localhost:3000'
 
 function Amigos({ setAmigoSeleccionado }) { // 👈 Recibimos el puente de App.jsx
   const navigate = useNavigate() // 👈 Inicializamos el navegador interno

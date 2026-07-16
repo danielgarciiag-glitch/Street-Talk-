@@ -1,119 +1,13 @@
+/* eslint-disable no-unused-vars */
 import { useState } from 'react'
 import { useUser } from '../useUser'
 
-const modos = {
-  traduccion: [
-    {
-      id: 1,
-      frase: "En serio, esa fiesta estuvo increíble",
-      respuesta_correcta: "no cap",
-      pista: "Se usa para decir que algo es verdad",
-      opciones: ["no cap", "lowkey", "slay", "it's giving"]
-    },
-    {
-      id: 2,
-      frase: "En secreto me encanta esa canción",
-      respuesta_correcta: "lowkey",
-      pista: "Algo que no quieres admitir abiertamente",
-      opciones: ["no cap", "lowkey", "bussin", "slay"]
-    },
-    {
-      id: 3,
-      frase: "Esa comida estaba deliciosa",
-      respuesta_correcta: "bussin",
-      pista: "Slang para describir comida muy buena",
-      opciones: ["slay", "bussin", "lowkey", "no cap"]
-    },
-    {
-      id: 4,
-      frase: "Ella lo hizo increíble en el escenario",
-      respuesta_correcta: "slay",
-      pista: "Brillar y hacerlo perfecto",
-      opciones: ["bussin", "no cap", "slay", "lowkey"]
-    }
-  ],
-  completar: [
-    {
-      id: 1,
-      frase: "That party was crazy, _____.",
-      respuesta_correcta: "no cap",
-      pista: "Completa con la expresión correcta",
-      opciones: ["no cap", "lowkey", "bet", "sus"]
-    },
-    {
-      id: 2,
-      frase: "I _____ love this song but I won't admit it.",
-      respuesta_correcta: "lowkey",
-      pista: "Algo que haces en secreto",
-      opciones: ["bussin", "lowkey", "fr fr", "rizz"]
-    },
-    {
-      id: 3,
-      frase: "Meet me at 8pm. — _____.",
-      respuesta_correcta: "bet",
-      pista: "Forma de decir de acuerdo en slang",
-      opciones: ["slay", "bet", "sus", "no cap"]
-    },
-    {
-      id: 4,
-      frase: "This food is _____, I can't stop eating.",
-      respuesta_correcta: "bussin",
-      pista: "Algo delicioso o increíble",
-      opciones: ["rizz", "fr fr", "bussin", "hits different"]
-    },
-    {
-      id: 5,
-      frase: "Bro has so much _____, everyone loves him.",
-      respuesta_correcta: "rizz",
-      pista: "Carisma y poder de atracción",
-      opciones: ["rizz", "bet", "sus", "slay"]
-    }
-  ],
-  verdadmentira: [
-    {
-      id: 1,
-      palabra: "No cap",
-      definicion: "Significa que estás mintiendo o exagerando",
-      respuesta_correcta: "mentira",
-      explicacion: "No cap significa que estás diciendo la verdad, sin mentira."
-    },
-    {
-      id: 2,
-      palabra: "Bussin",
-      definicion: "Se usa para decir que algo está delicioso o increíble",
-      respuesta_correcta: "verdad",
-      explicacion: "Bussin se usa para describir comida muy buena o algo increíble."
-    },
-    {
-      id: 3,
-      palabra: "Lowkey",
-      definicion: "Significa hacer algo de forma discreta o en secreto",
-      respuesta_correcta: "verdad",
-      explicacion: "Lowkey significa algo que haces sin llamar la atención."
-    },
-    {
-      id: 4,
-      palabra: "Slay",
-      definicion: "Significa fallar o hacerlo mal en algo",
-      respuesta_correcta: "mentira",
-      explicacion: "Slay significa hacerlo increíble, brillar y destacar."
-    },
-    {
-      id: 5,
-      palabra: "Sus",
-      definicion: "Significa que algo o alguien es sospechoso o raro",
-      respuesta_correcta: "verdad",
-      explicacion: "Sus viene de suspicious y se usa para algo o alguien sospechoso."
-    },
-    {
-      id: 6,
-      palabra: "Rizz",
-      definicion: "Significa tener mucho dinero o ser rico",
-      respuesta_correcta: "mentira",
-      explicacion: "Rizz significa carisma y poder de atracción, no dinero."
-    }
-  ]
-}
+const palabrasDisponibles = [
+  "no cap", "lowkey", "bussin", "slay", "rizz", "bet", "sus", "hits different", "it's giving", "fr fr",
+  "ouf", "chelou", "kiffer", "grave", "mano", "saudade", "bora", "massa"
+]
+
+const API = 'http://localhost:3000'
 
 function Arena() {
   const { ganarXP, sumarPartida } = useUser()
@@ -124,19 +18,46 @@ function Arena() {
   const [terminado, setTerminado] = useState(false)
   const [xpGanado, setXpGanado] = useState(0)
   const [explicacion, setExplicacion] = useState(null)
+  const [preguntas, setPreguntas] = useState([])
+  const [cargandoIA, setCargandoIA] = useState(false)
+  const [errorIA, setErrorIA] = useState(null)
 
-  const preguntas = modoActivo ? modos[modoActivo] : []
   const pregunta = preguntas[indice]
+
+  async function iniciarModo(modo) {
+    setCargandoIA(true)
+    setErrorIA(null)
+    const token = localStorage.getItem('token')
+    try {
+      const res = await fetch(`${API}/ia/generar-preguntas`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', authorization: token },
+        body: JSON.stringify({ palabras: palabrasDisponibles, modo })
+      })
+      const data = await res.json()
+      if (data.preguntas && data.preguntas.length > 0) {
+        setPreguntas(data.preguntas)
+        setModoActivo(modo)
+        setIndice(0)
+        setPuntaje(0)
+        setXpGanado(0)
+        setTerminado(false)
+        setSeleccion(null)
+      } else {
+        setErrorIA('No se pudieron generar preguntas. Intenta de nuevo.')
+      }
+    } catch (err) {
+      setErrorIA('Error conectando con la IA. Intenta de nuevo.')
+    }
+    setCargandoIA(false)
+  }
 
   async function guardarEnDB(xp, gano) {
     const token = localStorage.getItem('token')
     try {
-      await fetch('https://street-talk-backend.onrender.com/usuario/actualizar-xp', {
+      await fetch(`${API}/usuario/actualizar-xp`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'authorization': token
-        },
+        headers: { 'Content-Type': 'application/json', authorization: token },
         body: JSON.stringify({ xp_ganado: xp, gano })
       })
     } catch (err) {
@@ -154,7 +75,7 @@ function Arena() {
       setXpGanado(x => x + 50)
     }
 
-    if (modoActivo === 'verdadmentira') {
+    if (modoActivo === 'verdadmentira' && pregunta.explicacion) {
       setExplicacion(pregunta.explicacion)
     }
 
@@ -182,43 +103,50 @@ function Arena() {
     setXpGanado(0)
     setModoActivo(null)
     setExplicacion(null)
+    setPreguntas([])
   }
 
   if (!modoActivo) {
     return (
       <div className="container">
         <h1 className="logo">⚔️ Language Arena</h1>
-        <p className="tagline">Elige tu modo de juego</p>
+        <p className="tagline">Elige tu modo de juego — preguntas generadas por IA</p>
 
-        <div className="modos-grid">
-          <div className="modo-selector" onClick={() => setModoActivo('traduccion')}>
-            <span className="modo-icon">⚡</span>
-            <h3>Traducción Veloz</h3>
-            <p>Traduce frases al slang correcto</p>
-            <span className="modo-xp">+50 XP por respuesta</span>
-          </div>
+        {errorIA && <div className="desafio-mensaje">⚠️ {errorIA}</div>}
 
-          <div className="modo-selector" onClick={() => setModoActivo('completar')}>
-            <span className="modo-icon">✍️</span>
-            <h3>Completar Frases</h3>
-            <p>Completa la frase con el slang correcto</p>
-            <span className="modo-xp">+50 XP por respuesta</span>
+        {cargandoIA ? (
+          <div style={{ textAlign: 'center', marginTop: '3rem' }}>
+            <p className="tagline" style={{ fontSize: '1.2rem' }}>🤖 La IA está generando tus preguntas...</p>
+            <p className="tagline">Esto toma unos segundos</p>
           </div>
-
-          <div className="modo-selector" onClick={() => setModoActivo('verdadmentira')}>
-            <span className="modo-icon">🤔</span>
-            <h3>¿Verdad o Mentira?</h3>
-            <p>¿La definición del slang es correcta?</p>
-            <span className="modo-xp">+50 XP por respuesta</span>
+        ) : (
+          <div className="modos-grid">
+            <div className="modo-selector" onClick={() => iniciarModo('traduccion')}>
+              <span className="modo-icon">⚡</span>
+              <h3>Traducción Veloz</h3>
+              <p>Traduce frases al slang correcto</p>
+              <span className="modo-xp">+50 XP por respuesta · 🤖 IA</span>
+            </div>
+            <div className="modo-selector" onClick={() => iniciarModo('completar')}>
+              <span className="modo-icon">✏️</span>
+              <h3>Completar Frases</h3>
+              <p>Completa la frase con el slang correcto</p>
+              <span className="modo-xp">+50 XP por respuesta · 🤖 IA</span>
+            </div>
+            <div className="modo-selector" onClick={() => iniciarModo('verdadmentira')}>
+              <span className="modo-icon">🤔</span>
+              <h3>¿Verdad o Mentira?</h3>
+              <p>¿La definición del slang es correcta?</p>
+              <span className="modo-xp">+50 XP por respuesta · 🤖 IA</span>
+            </div>
+            <div className="modo-selector bloqueado">
+              <span className="modo-icon">🗣️</span>
+              <h3>Pronunciación</h3>
+              <p>Próximamente</p>
+              <span className="modo-xp">🔒 Pronto</span>
+            </div>
           </div>
-
-          <div className="modo-selector bloqueado">
-            <span className="modo-icon">🗣️</span>
-            <h3>Pronunciación</h3>
-            <p>Próximamente</p>
-            <span className="modo-xp">🔒 Pronto</span>
-          </div>
-        </div>
+        )}
       </div>
     )
   }
@@ -229,61 +157,52 @@ function Arena() {
         <h1 className="logo">⚔️ Language Arena</h1>
         <div className="resultado-card">
           <p className="resultado-emoji">
-            {puntaje >= preguntas.length - 1 ? "🏆" : puntaje >= Math.floor(preguntas.length / 2) ? "💪" : "😅"}
+            {puntaje >= preguntas.length - 1 ? '🏆' : puntaje >= Math.floor(preguntas.length / 2) ? '💪' : '😅'}
           </p>
           <h2 className="resultado-titulo">
-            {puntaje >= preguntas.length - 1 ? "¡Perfecto!" : puntaje >= Math.floor(preguntas.length / 2) ? "¡Buen trabajo!" : "¡Sigue practicando!"}
+            {puntaje >= preguntas.length - 1 ? '¡Perfecto!' : puntaje >= Math.floor(preguntas.length / 2) ? '¡Buen trabajo!' : '¡Sigue practicando!'}
           </h2>
           <p className="resultado-puntaje">{puntaje} / {preguntas.length} correctas</p>
-          <p className="xp-ganado">+{xpGanado} XP ganados ⭐</p>
-          <button className="btn-primary" onClick={reiniciar}>Volver a la Arena</button>
+          <p className="xp-ganado">+{xpGanado} XP ganados</p>
+          <button className="btn-primary" onClick={reiniciar}>Jugar de nuevo</button>
         </div>
       </div>
     )
   }
+
+  if (!pregunta) return null
 
   if (modoActivo === 'verdadmentira') {
     return (
       <div className="container">
         <h1 className="logo">⚔️ Language Arena</h1>
         <p className="tagline">🤔 ¿Verdad o Mentira?</p>
-
         <div className="arena-card">
           <div className="arena-progreso">
             <span>Pregunta {indice + 1} de {preguntas.length}</span>
             <span>⭐ {puntaje} pts</span>
           </div>
-
-          <h2 className="vm-palabra">{pregunta.palabra}</h2>
-          <p className="vm-definicion">"{pregunta.definicion}"</p>
-
+          <h2 className="arena-frase">"{pregunta.palabra}"</h2>
+          <p style={{ color: '#ccc', marginBottom: '1.5rem', textAlign: 'center' }}>{pregunta.definicion}</p>
           {explicacion && (
-            <div className="vm-explicacion">
+            <div style={{ background: '#2a2a3e', padding: '0.75rem', borderRadius: '8px', marginBottom: '1rem', color: '#aaa', fontSize: '0.9rem' }}>
               💡 {explicacion}
             </div>
           )}
-
-          <div className="vm-opciones">
-            <button
-              className={`vm-btn verdad 
-                ${seleccion === 'verdad' && pregunta.respuesta_correcta === 'verdad' ? 'correcta' : ''}
-                ${seleccion === 'verdad' && pregunta.respuesta_correcta !== 'verdad' ? 'incorrecta' : ''}
-                ${seleccion && pregunta.respuesta_correcta === 'verdad' ? 'correcta' : ''}
-              `}
-              onClick={() => responder('verdad')}
-            >
-              ✅ Verdad
-            </button>
-            <button
-              className={`vm-btn mentira
-                ${seleccion === 'mentira' && pregunta.respuesta_correcta === 'mentira' ? 'correcta' : ''}
-                ${seleccion === 'mentira' && pregunta.respuesta_correcta !== 'mentira' ? 'incorrecta' : ''}
-                ${seleccion && pregunta.respuesta_correcta === 'mentira' ? 'correcta' : ''}
-              `}
-              onClick={() => responder('mentira')}
-            >
-              ❌ Mentira
-            </button>
+          <div className="arena-opciones">
+            {['verdad', 'mentira'].map(opcion => (
+              <button
+                key={opcion}
+                className={`opcion-btn
+                  ${seleccion === opcion && opcion === pregunta.respuesta_correcta ? 'correcta' : ''}
+                  ${seleccion === opcion && opcion !== pregunta.respuesta_correcta ? 'incorrecta' : ''}
+                  ${seleccion && opcion === pregunta.respuesta_correcta ? 'correcta' : ''}
+                `}
+                onClick={() => responder(opcion)}
+              >
+                {opcion === 'verdad' ? '✅ Verdad' : '❌ Mentira'}
+              </button>
+            ))}
           </div>
         </div>
       </div>
@@ -294,23 +213,19 @@ function Arena() {
     <div className="container">
       <h1 className="logo">⚔️ Language Arena</h1>
       <p className="tagline">
-        {modoActivo === 'traduccion' ? '⚡ Traducción Veloz' : '✍️ Completar Frases'}
+        {modoActivo === 'traduccion' ? '⚡ Traducción Veloz' : '✏️ Completar Frases'}
       </p>
-
       <div className="arena-card">
         <div className="arena-progreso">
           <span>Pregunta {indice + 1} de {preguntas.length}</span>
           <span>⭐ {puntaje} pts</span>
         </div>
-
-        <p className="arena-pista">💡 {pregunta.pista}</p>
         <h2 className="arena-frase">"{pregunta.frase}"</h2>
-
         <div className="arena-opciones">
-          {pregunta.opciones.map((opcion) => (
+          {pregunta.opciones.map(opcion => (
             <button
               key={opcion}
-              className={`opcion-btn 
+              className={`opcion-btn
                 ${seleccion === opcion && opcion === pregunta.respuesta_correcta ? 'correcta' : ''}
                 ${seleccion === opcion && opcion !== pregunta.respuesta_correcta ? 'incorrecta' : ''}
                 ${seleccion && opcion === pregunta.respuesta_correcta ? 'correcta' : ''}

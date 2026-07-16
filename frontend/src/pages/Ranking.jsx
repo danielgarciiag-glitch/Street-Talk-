@@ -11,7 +11,7 @@ function Ranking() {
   useEffect(() => {
     async function cargarRanking() {
       try {
-        const res = await fetch('https://street-talk-backend.onrender.com/usuario/ranking')
+        const res = await fetch('http://localhost:3000/usuario/ranking')
         const data = await res.json()
         if (data.jugadores) {
           setJugadores(data.jugadores)

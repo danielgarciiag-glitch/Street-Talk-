@@ -2,7 +2,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useState, useEffect } from 'react'
 
-const API = 'https://street-talk-backend.onrender.com'
+const API = 'http://localhost:3000'
 
 function Torneos() {
   const [torneo, setTorneo] = useState(null)

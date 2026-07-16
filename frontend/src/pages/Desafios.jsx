@@ -31,7 +31,7 @@ const preguntasDesafio = [
   }
 ]
 
-const API = 'https://street-talk-backend.onrender.com'
+const API = 'http://localhost:3000'
 
 function Desafios() {
   const { usuario } = useUser()

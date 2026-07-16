@@ -9,7 +9,7 @@ function Perfil() {
     async function cargarPerfil() {
       const token = localStorage.getItem('token')
       try {
-        const res = await fetch('https://street-talk-backend.onrender.com/usuario/perfil', {
+        const res = await fetch('http://localhost:3000/usuario/perfil', {
           headers: { 'authorization': token }
         })
         const data = await res.json()
