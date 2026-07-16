@@ -1230,3 +1230,7 @@ body::after {
   padding-top: 0.75rem;
   border-top: 1px solid #2a2a3e;
 }
+.rival-seleccionado {
+  border: 1px solid #6c63ff !important;
+  background: #1a1a2e !important;
+}
