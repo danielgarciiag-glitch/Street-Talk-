@@ -172,7 +172,7 @@ function Desafios() {
 
   // PANTALLA DE RESULTADO
   if (desafioActivo && terminado) {
-    const yoGane = resultado?.resultado === (desafioActivo.retador_id === miId ? 'retador' : 'retado')
+   const yoGane = resultado?.resultado === (Number(desafioActivo.retador_id) === Number(miId) ? 'retador' : 'retado')
     const esEmpate = resultado?.resultado === 'empate'
     const apuesta = desafioActivo.apuesta || 0
 
