@@ -12,6 +12,7 @@ import Desafios from './pages/Desafios'
 import Amigos from './pages/Amigos'
 import Chat from './pages/Chat'
 import Torneos from './pages/Torneos'
+import Clanes from './pages/Clanes'
 import './App.css'
 
 function App() {
@@ -49,6 +50,7 @@ function App() {
         <Link to="/desafios">🥊</Link>
         <Link to="/torneos">🏆</Link>
         <Link to="/ranking">📊</Link>
+        <Link to="/clanes">🛡️</Link>
         <Link to="/amigos">👥</Link>
         <Link to="/chat">💬</Link>
         <Link to="/perfil">👤</Link>
@@ -62,6 +64,7 @@ function App() {
         <Route path="/desafios" element={<Desafios />} />
         <Route path="/torneos" element={<Torneos />} />
         <Route path="/ranking" element={<Ranking />} />
+        <Route path="/clanes" element={<Clanes />} />
         <Route path="/amigos" element={<Amigos setAmigoSeleccionado={setAmigoSeleccionado} />} />
         <Route path="/chat" element={<Chat amigoSeleccionado={amigoSeleccionado} setAmigoSeleccionado={setAmigoSeleccionado} />} />
         <Route path="/perfil" element={<Perfil />} />
