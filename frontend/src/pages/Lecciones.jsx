@@ -1,7 +1,7 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 const todasLasLecciones = [
-  // ===== INGLÉS =====
   { id: 1, idioma: "Inglés", bandera: "🇺🇸", categoria: "TikTok Speak", emoji: "🔥", palabra: "No cap", significado: "Sin mentira / En serio", ejemplo: "That party was crazy, no cap.", traduccion: "Esa fiesta estuvo loca, en serio.", nivel: "Básico" },
   { id: 2, idioma: "Inglés", bandera: "🇺🇸", categoria: "Street Slang", emoji: "🛹", palabra: "Lowkey", significado: "En secreto / Un poco", ejemplo: "I lowkey love this song.", traduccion: "En secreto me encanta esta canción.", nivel: "Básico" },
   { id: 3, idioma: "Inglés", bandera: "🇺🇸", categoria: "Expresiones", emoji: "😂", palabra: "It's giving...", significado: "Da vibras de... / Se siente como...", ejemplo: "This outfit is giving rockstar.", traduccion: "Este outfit da vibras de rockstar.", nivel: "Intermedio" },
@@ -22,8 +22,6 @@ const todasLasLecciones = [
   { id: 28, idioma: "Inglés", bandera: "🇺🇸", categoria: "TikTok Speak", emoji: "🔥", palabra: "Main character", significado: "Actuar como protagonista de tu propia vida", ejemplo: "I'm having a main character moment.", traduccion: "Estoy teniendo un momento de personaje principal.", nivel: "Intermedio" },
   { id: 29, idioma: "Inglés", bandera: "🇺🇸", categoria: "Street Slang", emoji: "🛹", palabra: "Drip", significado: "Estilo / Ropa muy cool", ejemplo: "Bro's drip is immaculate today.", traduccion: "El estilo del bro hoy está impecable.", nivel: "Básico" },
   { id: 30, idioma: "Inglés", bandera: "🇺🇸", categoria: "Expresiones", emoji: "😂", palabra: "Touch grass", significado: "Sal afuera / Deja de estar en internet", ejemplo: "You need to touch grass bro.", traduccion: "Necesitas salir afuera bro.", nivel: "Intermedio" },
-
-  // ===== PORTUGUÉS =====
   { id: 9, idioma: "Portugués", bandera: "🇧🇷", categoria: "Gíria", emoji: "🌴", palabra: "Mano", significado: "Amigo / Bro", ejemplo: "Mano, que situação estranha!", traduccion: "Bro, ¡qué situación tan rara!", nivel: "Básico" },
   { id: 10, idioma: "Portugués", bandera: "🇧🇷", categoria: "Gíria", emoji: "🌴", palabra: "Saudade", significado: "Nostalgia profunda / Extrañar mucho", ejemplo: "Tô com saudade de você.", traduccion: "Te extraño mucho.", nivel: "Básico" },
   { id: 11, idioma: "Portugués", bandera: "🇧🇷", categoria: "Internet", emoji: "📱", palabra: "Tá ligado?", significado: "¿Entiendes? / ¿Sabes?", ejemplo: "É complicado, tá ligado?", traduccion: "Es complicado, ¿entiendes?", nivel: "Intermedio" },
@@ -37,8 +35,6 @@ const todasLasLecciones = [
   { id: 36, idioma: "Portugués", bandera: "🇧🇷", categoria: "Internet", emoji: "📱", palabra: "Stalkear", significado: "Curiosear el perfil de alguien", ejemplo: "Fui stalkear o perfil dele.", traduccion: "Fui a curiosear su perfil.", nivel: "Básico" },
   { id: 37, idioma: "Portugués", bandera: "🇧🇷", categoria: "Gíria", emoji: "🌴", palabra: "Chapar", significado: "Quedarse dormido / Desmayarse de cansancio", ejemplo: "Chapei assim que cheguei em casa.", traduccion: "Me quedé dormido apenas llegué a casa.", nivel: "Avanzado" },
   { id: 38, idioma: "Portugués", bandera: "🇧🇷", categoria: "Internet", emoji: "📱", palabra: "Rachar", significado: "Dividir la cuenta / Partir gastos", ejemplo: "Bora rachar a conta?", traduccion: "¿Vamos a dividir la cuenta?", nivel: "Intermedio" },
-
-  // ===== FRANCÉS =====
   { id: 14, idioma: "Francés", bandera: "🇫🇷", categoria: "Argot", emoji: "🥖", palabra: "Ouf", significado: "Increíble / Loco (al revés de fou)", ejemplo: "Ce film était ouf!", traduccion: "¡Esa película estuvo increíble!", nivel: "Básico" },
   { id: 15, idioma: "Francés", bandera: "🇫🇷", categoria: "Argot", emoji: "🥖", palabra: "C'est nul", significado: "Es una porquería / No vale nada", ejemplo: "Ce film c'est nul.", traduccion: "Esta película es una porquería.", nivel: "Básico" },
   { id: 16, idioma: "Francés", bandera: "🇫🇷", categoria: "Internet", emoji: "📱", palabra: "Kiffer", significado: "Gustar mucho / Amar algo", ejemplo: "Je kiffe trop cette musique.", traduccion: "Me encanta demasiado esta música.", nivel: "Intermedio" },
@@ -51,8 +47,6 @@ const todasLasLecciones = [
   { id: 43, idioma: "Francés", bandera: "🇫🇷", categoria: "Argot", emoji: "🥖", palabra: "Zarbi", significado: "Raro / Extraño (al revés de bizarre)", ejemplo: "C'est zarbi comme situation.", traduccion: "Es una situación muy rara.", nivel: "Avanzado" },
   { id: 44, idioma: "Francés", bandera: "🇫🇷", categoria: "Internet", emoji: "📱", palabra: "Pécho", significado: "Ligar / Conquistar a alguien", ejemplo: "Il a pécho à la soirée.", traduccion: "Ligó en la fiesta.", nivel: "Intermedio" },
   { id: 45, idioma: "Francés", bandera: "🇫🇷", categoria: "Argot", emoji: "🥖", palabra: "Avoir la flemme", significado: "Tener pereza / No tener ganas", ejemplo: "J'ai la flemme d'aller au sport.", traduccion: "Tengo pereza de ir al gimnasio.", nivel: "Intermedio" },
-
-  // ===== JAPONÉS =====
   { id: 46, idioma: "Japonés", bandera: "🇯🇵", categoria: "Anime Slang", emoji: "⛩️", palabra: "Sugoi", significado: "¡Increíble! / ¡Wow!", ejemplo: "Sugoi! That's amazing!", traduccion: "¡Increíble! ¡Eso es asombroso!", nivel: "Básico" },
   { id: 47, idioma: "Japonés", bandera: "🇯🇵", categoria: "Internet", emoji: "📱", palabra: "Kawaii", significado: "Tierno / Adorable / Cute", ejemplo: "That cat is so kawaii!", traduccion: "¡Ese gato es tan adorable!", nivel: "Básico" },
   { id: 48, idioma: "Japonés", bandera: "🇯🇵", categoria: "Anime Slang", emoji: "⛩️", palabra: "Senpai", significado: "Alguien mayor o más experimentado que tú", ejemplo: "Notice me senpai!", traduccion: "¡Fíjate en mí senpai!", nivel: "Básico" },
@@ -74,7 +68,8 @@ const categorias = {
 }
 const niveles = ["Todos", "Básico", "Intermedio", "Avanzado"]
 
-function Lecciones() {
+function Lecciones({ setPalabraPractica }) {
+  const navigate = useNavigate()
   const [idiomaActivo, setIdiomaActivo] = useState("Todos")
   const [categoriaActiva, setCategoriaActiva] = useState("Todas")
   const [nivelActivo, setNivelActivo] = useState("Todos")
@@ -93,6 +88,11 @@ function Lecciones() {
     setCategoriaActiva("Todas")
   }
 
+  function practicarPalabra(palabra) {
+    setPalabraPractica(palabra)
+    navigate('/arena')
+  }
+
   return (
     <div className="container">
       <h1 className="logo">📚 Lecciones</h1>
@@ -101,35 +101,21 @@ function Lecciones() {
       <div className="filtros">
         <div className="filtro-grupo">
           {idiomas.map(idioma => (
-            <button
-              key={idioma}
-              className={idiomaActivo === idioma ? 'filtro-activo' : 'filtro-btn'}
-              onClick={() => cambiarIdioma(idioma)}
-            >
+            <button key={idioma} className={idiomaActivo === idioma ? 'filtro-activo' : 'filtro-btn'} onClick={() => cambiarIdioma(idioma)}>
               {idioma === "Inglés" ? "🇺🇸" : idioma === "Portugués" ? "🇧🇷" : idioma === "Francés" ? "🇫🇷" : idioma === "Japonés" ? "🇯🇵" : "🌍"} {idioma}
             </button>
           ))}
         </div>
-
         <div className="filtro-grupo">
           {categoriasActuales.map(cat => (
-            <button
-              key={cat}
-              className={categoriaActiva === cat ? 'filtro-activo' : 'filtro-btn'}
-              onClick={() => setCategoriaActiva(cat)}
-            >
+            <button key={cat} className={categoriaActiva === cat ? 'filtro-activo' : 'filtro-btn'} onClick={() => setCategoriaActiva(cat)}>
               {cat}
             </button>
           ))}
         </div>
-
         <div className="filtro-grupo">
           {niveles.map(niv => (
-            <button
-              key={niv}
-              className={nivelActivo === niv ? 'filtro-activo' : 'filtro-btn'}
-              onClick={() => setNivelActivo(niv)}
-            >
+            <button key={niv} className={nivelActivo === niv ? 'filtro-activo' : 'filtro-btn'} onClick={() => setNivelActivo(niv)}>
               {niv}
             </button>
           ))}
@@ -153,7 +139,9 @@ function Lecciones() {
               <p className="ejemplo-en">"{leccion.ejemplo}"</p>
               <p className="ejemplo-es">"{leccion.traduccion}"</p>
             </div>
-            <button className="btn-primary">Practicar esta palabra</button>
+            <button className="btn-primary" onClick={() => practicarPalabra(leccion.palabra)}>
+              ⚔️ Practicar esta palabra
+            </button>
           </div>
         ))}
       </div>
