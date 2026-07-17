@@ -1,4 +1,5 @@
-import { useState } from 'react'
+/* eslint-disable no-unused-vars */
+import { useState, useRef } from 'react'
 import { useUser } from '../useUser'
 
 const bancoPorPalabra = {
@@ -25,7 +26,7 @@ const bancoPorPalabra = {
   "rizz": [
     { frase: "Bro tiene demasiado carisma con las chicas", respuesta_correcta: "rizz", opciones: ["rizz", "bet", "sus", "fr fr"] },
     { frase: "Ese tipo tiene un poder de atracción increíble", respuesta_correcta: "rizz", opciones: ["slay", "rizz", "lowkey", "bussin"] },
-    { frase: "Le habló y ella cayó inmediatamente, tiene demasiado", respuesta_correcta: "rizz", opciones: ["no cap", "bet", "rizz", "sus"] }
+    { frase: "Le habló y ella cayó inmediatamente", respuesta_correcta: "rizz", opciones: ["no cap", "bet", "rizz", "sus"] }
   ],
   "bet": [
     { frase: "De acuerdo, nos vemos a las 5", respuesta_correcta: "bet", opciones: ["slay", "bet", "sus", "no cap"] },
@@ -103,7 +104,7 @@ const bancoPorPalabra = {
     { frase: "Ese personaje es muy lindo", respuesta_correcta: "kawaii", opciones: ["yabai", "oshi", "kawaii", "sugoi"] }
   ],
   "yabai": [
-    { frase: "Eso puede ser muy malo o increíble según el contexto", respuesta_correcta: "yabai", opciones: ["yabai", "sugoi", "kawaii", "nakama"] },
+    { frase: "Eso puede ser muy malo o increíble según contexto", respuesta_correcta: "yabai", opciones: ["yabai", "sugoi", "kawaii", "nakama"] },
     { frase: "Esa situación está brutal", respuesta_correcta: "yabai", opciones: ["kawaii", "yabai", "oshi", "sugoi"] },
     { frase: "Esto está muy extremo", respuesta_correcta: "yabai", opciones: ["nakama", "sugoi", "yabai", "kawaii"] }
   ]
@@ -117,7 +118,250 @@ const preguntasGenericas = [
   { frase: "Bro tiene demasiado carisma", respuesta_correcta: "rizz", opciones: ["rizz", "bet", "sus", "fr fr"] }
 ]
 
+const palabrasPronunciacion = [
+  { palabra: "No cap", pronunciacion: "noh cap", significado: "Sin mentira / En serio", ejemplo: "That party was crazy, no cap.", idioma: "🇺🇸" },
+  { palabra: "Lowkey", pronunciacion: "loh-kee", significado: "En secreto / Un poco", ejemplo: "I lowkey love this song.", idioma: "🇺🇸" },
+  { palabra: "Bussin", pronunciacion: "buh-sin", significado: "Delicioso / Increíble", ejemplo: "This food is bussin fr.", idioma: "🇺🇸" },
+  { palabra: "Slay", pronunciacion: "slay", significado: "Hacerlo increíble / Brillar", ejemplo: "She slayed that performance.", idioma: "🇺🇸" },
+  { palabra: "Rizz", pronunciacion: "riz", significado: "Carisma / Poder de atracción", ejemplo: "Bro has so much rizz.", idioma: "🇺🇸" },
+  { palabra: "Bet", pronunciacion: "bet", significado: "De acuerdo / Listo", ejemplo: "Meet me at 5. – Bet.", idioma: "🇺🇸" },
+  { palabra: "Sus", pronunciacion: "sus", significado: "Sospechoso / Raro", ejemplo: "That guy is acting sus.", idioma: "🇺🇸" },
+  { palabra: "Fr fr", pronunciacion: "for real for real", significado: "De verdad de verdad", ejemplo: "That was the best day fr fr.", idioma: "🇺🇸" },
+  { palabra: "Flex", pronunciacion: "flex", significado: "Presumir / Mostrar", ejemplo: "He's always flexing his car.", idioma: "🇺🇸" },
+  { palabra: "Drip", pronunciacion: "drip", significado: "Estilo / Ropa cool", ejemplo: "Bro's drip is immaculate.", idioma: "🇺🇸" },
+  { palabra: "Ouf", pronunciacion: "oof", significado: "Increíble / Loco", ejemplo: "Ce film était ouf!", idioma: "🇫🇷" },
+  { palabra: "Chelou", pronunciacion: "sheh-loo", significado: "Raro / Sospechoso", ejemplo: "C'est chelou comme situation.", idioma: "🇫🇷" },
+  { palabra: "Sugoi", pronunciacion: "su-goi", significado: "¡Increíble! / ¡Wow!", ejemplo: "Sugoi! That's amazing!", idioma: "🇯🇵" },
+  { palabra: "Kawaii", pronunciacion: "ka-wai-i", significado: "Tierno / Adorable", ejemplo: "That cat is so kawaii!", idioma: "🇯🇵" },
+  { palabra: "Yabai", pronunciacion: "ya-bai", significado: "Brutal / Extremo", ejemplo: "That movie was yabai!", idioma: "🇯🇵" },
+]
+
 const API = 'http://localhost:3000'
+
+function ModoPronunciacion({ onVolver }) {
+  const [indice, setIndice] = useState(0)
+  const [escuchando, setEscuchando] = useState(false)
+  const [resultado, setResultado] = useState(null)
+  const [textoEscuchado, setTextoEscuchado] = useState('')
+  const [puntaje, setPuntaje] = useState(0)
+  const [terminado, setTerminado] = useState(false)
+  const [xpGanado, setXpGanado] = useState(0)
+  const recognitionRef = useRef(null)
+  const token = localStorage.getItem('token')
+
+  const palabraActual = palabrasPronunciacion[indice]
+
+  function normalizar(texto) {
+    return texto.toLowerCase()
+      .replace(/[^a-záéíóúüñ\s]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim()
+  }
+
+  function verificarPronunciacion(textoHablado) {
+    const hablado = normalizar(textoHablado)
+    const objetivo = normalizar(palabraActual.palabra)
+    const pronunciacionGuia = normalizar(palabraActual.pronunciacion)
+
+    const coincideExacto = hablado.includes(objetivo)
+    const coincidePronunciacion = hablado.includes(pronunciacionGuia)
+    const similitud = calcularSimilitud(hablado, objetivo)
+
+    return coincideExacto || coincidePronunciacion || similitud >= 0.6
+  }
+
+  function calcularSimilitud(a, b) {
+    if (a === b) return 1
+    if (a.length === 0 || b.length === 0) return 0
+    const longer = a.length > b.length ? a : b
+    const shorter = a.length > b.length ? b : a
+    const editDistance = levenshtein(longer, shorter)
+    return (longer.length - editDistance) / longer.length
+  }
+
+  function levenshtein(a, b) {
+    const matrix = []
+    for (let i = 0; i <= b.length; i++) matrix[i] = [i]
+    for (let j = 0; j <= a.length; j++) matrix[0][j] = j
+    for (let i = 1; i <= b.length; i++) {
+      for (let j = 1; j <= a.length; j++) {
+        if (b.charAt(i - 1) === a.charAt(j - 1)) {
+          matrix[i][j] = matrix[i - 1][j - 1]
+        } else {
+          matrix[i][j] = Math.min(
+            matrix[i - 1][j - 1] + 1,
+            matrix[i][j - 1] + 1,
+            matrix[i - 1][j] + 1
+          )
+        }
+      }
+    }
+    return matrix[b.length][a.length]
+  }
+
+  function escuchar() {
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+      alert('Tu navegador no soporta reconocimiento de voz. Usa Chrome.')
+      return
+    }
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
+    const recognition = new SpeechRecognition()
+    recognitionRef.current = recognition
+
+    recognition.lang = 'en-US'
+    recognition.continuous = false
+    recognition.interimResults = false
+
+    recognition.onstart = () => setEscuchando(true)
+
+    recognition.onresult = (event) => {
+      const texto = event.results[0][0].transcript
+      setTextoEscuchado(texto)
+      const correcto = verificarPronunciacion(texto)
+      setResultado(correcto ? 'correcto' : 'incorrecto')
+      if (correcto) {
+        setPuntaje(p => p + 1)
+        setXpGanado(x => x + 75)
+      }
+      setEscuchando(false)
+    }
+
+    recognition.onerror = () => {
+      setEscuchando(false)
+      setResultado('error')
+    }
+
+    recognition.onend = () => setEscuchando(false)
+
+    recognition.start()
+  }
+
+  async function siguiente() {
+    if (indice + 1 < palabrasPronunciacion.length) {
+      setIndice(indice + 1)
+      setResultado(null)
+      setTextoEscuchado('')
+    } else {
+      const token2 = localStorage.getItem('token')
+      try {
+        await fetch(`${API}/usuario/actualizar-xp`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', authorization: token2 },
+          body: JSON.stringify({ xp_ganado: xpGanado, gano: puntaje >= Math.floor(palabrasPronunciacion.length / 2) })
+        })
+      } catch (err) { console.error(err) }
+      setTerminado(true)
+    }
+  }
+
+  function reproducirPalabra() {
+    if ('speechSynthesis' in window) {
+      const utterance = new SpeechSynthesisUtterance(palabraActual.palabra)
+      utterance.lang = palabraActual.idioma === '🇯🇵' ? 'ja-JP' : palabraActual.idioma === '🇫🇷' ? 'fr-FR' : 'en-US'
+      utterance.rate = 0.8
+      window.speechSynthesis.speak(utterance)
+    }
+  }
+
+  if (terminado) {
+    return (
+      <div className="container">
+        <h1 className="logo">🗣️ Pronunciación</h1>
+        <div className="resultado-card">
+          <p className="resultado-emoji">{puntaje >= 10 ? '🏆' : puntaje >= 7 ? '💪' : '😅'}</p>
+          <h2 className="resultado-titulo">
+            {puntaje >= 10 ? '¡Pronunciación perfecta!' : puntaje >= 7 ? '¡Muy bien!' : '¡Sigue practicando!'}
+          </h2>
+          <p className="resultado-puntaje">{puntaje} / {palabrasPronunciacion.length} correctas</p>
+          <p className="xp-ganado">+{xpGanado} XP ganados</p>
+          <button className="btn-primary" onClick={onVolver}>Volver a Arena</button>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="container">
+      <h1 className="logo">🗣️ Pronunciación</h1>
+      <p className="tagline">Di la palabra en voz alta</p>
+
+      <div className="arena-card">
+        <div className="arena-progreso">
+          <span>Palabra {indice + 1} de {palabrasPronunciacion.length}</span>
+          <span>⭐ {puntaje} pts</span>
+        </div>
+
+        <div style={{ textAlign: 'center', margin: '1.5rem 0' }}>
+          <span style={{ fontSize: '2rem' }}>{palabraActual.idioma}</span>
+          <h2 style={{ fontSize: '2.5rem', color: '#f0c040', margin: '0.5rem 0' }}>{palabraActual.palabra}</h2>
+          <p style={{ color: '#aaa', marginBottom: '0.5rem' }}>{palabraActual.significado}</p>
+          <p style={{ color: '#6c63ff', fontSize: '0.9rem', marginBottom: '0.5rem' }}>
+            📖 Pronunciación: <strong>"{palabraActual.pronunciacion}"</strong>
+          </p>
+          <p style={{ color: '#888', fontSize: '0.85rem', fontStyle: 'italic' }}>"{palabraActual.ejemplo}"</p>
+        </div>
+
+        <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', marginBottom: '1.5rem' }}>
+          <button
+            onClick={reproducirPalabra}
+            style={{ background: '#2a2a3e', border: '1px solid #6c63ff', color: 'white', padding: '10px 20px', borderRadius: '12px', cursor: 'pointer', fontSize: '1rem' }}
+          >
+            🔊 Escuchar
+          </button>
+          <button
+            onClick={escuchar}
+            disabled={escuchando || resultado !== null}
+            style={{
+              background: escuchando ? '#f44336' : '#6c63ff',
+              border: 'none',
+              color: 'white',
+              padding: '10px 24px',
+              borderRadius: '12px',
+              cursor: 'pointer',
+              fontSize: '1rem',
+              fontWeight: 'bold',
+              animation: escuchando ? 'pulse 1s infinite' : 'none'
+            }}
+          >
+            {escuchando ? '🎙️ Escuchando...' : '🎤 Hablar'}
+          </button>
+        </div>
+
+        {textoEscuchado && (
+          <p style={{ textAlign: 'center', color: '#aaa', fontSize: '0.9rem', marginBottom: '1rem' }}>
+            🎙️ Escuché: <strong>"{textoEscuchado}"</strong>
+          </p>
+        )}
+
+        {resultado === 'correcto' && (
+          <div style={{ textAlign: 'center', padding: '1rem', background: '#1a3a1a', borderRadius: '12px', marginBottom: '1rem' }}>
+            <p style={{ color: '#4caf50', fontSize: '1.3rem', fontWeight: 'bold' }}>✅ ¡Perfecto! +75 XP</p>
+          </div>
+        )}
+
+        {resultado === 'incorrecto' && (
+          <div style={{ textAlign: 'center', padding: '1rem', background: '#3a1a1a', borderRadius: '12px', marginBottom: '1rem' }}>
+            <p style={{ color: '#f44336', fontSize: '1.1rem' }}>❌ Inténtalo de nuevo</p>
+            <p style={{ color: '#aaa', fontSize: '0.85rem' }}>Pronuncia: <strong>"{palabraActual.pronunciacion}"</strong></p>
+          </div>
+        )}
+
+        {resultado === 'error' && (
+          <div style={{ textAlign: 'center', padding: '1rem', background: '#3a2a1a', borderRadius: '12px', marginBottom: '1rem' }}>
+            <p style={{ color: '#f0c040' }}>⚠️ No se escuchó bien. Intenta de nuevo.</p>
+          </div>
+        )}
+
+        {resultado && (
+          <button className="btn-primary" onClick={siguiente} style={{ width: '100%' }}>
+            {indice + 1 < palabrasPronunciacion.length ? 'Siguiente →' : 'Ver resultado'}
+          </button>
+        )}
+      </div>
+    </div>
+  )
+}
 
 function Arena({ palabraPractica, setPalabraPractica }) {
   const { ganarXP, sumarPartida } = useUser()
@@ -155,21 +399,17 @@ function Arena({ palabraPractica, setPalabraPractica }) {
         headers: { 'Content-Type': 'application/json', authorization: token },
         body: JSON.stringify({ xp_ganado: xp, gano })
       })
-    } catch (err) {
-      console.error('Error guardando XP:', err)
-    }
+    } catch (err) { console.error('Error guardando XP:', err) }
   }
 
   function responder(opcion) {
     if (seleccion) return
     setSeleccion(opcion)
-
     const esCorrecta = opcion === pregunta.respuesta_correcta
     if (esCorrecta) {
       setPuntaje(p => p + 1)
       setXpGanado(x => x + 50)
     }
-
     setTimeout(async () => {
       if (indice + 1 < preguntas.length) {
         setIndice(indice + 1)
@@ -196,6 +436,10 @@ function Arena({ palabraPractica, setPalabraPractica }) {
     if (setPalabraPractica) setPalabraPractica(null)
   }
 
+  if (modoActivo === 'pronunciacion') {
+    return <ModoPronunciacion onVolver={reiniciar} />
+  }
+
   if (!modoActivo) {
     return (
       <div className="container">
@@ -220,11 +464,11 @@ function Arena({ palabraPractica, setPalabraPractica }) {
             <p>¿La definición del slang es correcta?</p>
             <span className="modo-xp">+50 XP por respuesta</span>
           </div>
-          <div className="modo-selector bloqueado">
+          <div className="modo-selector" onClick={() => setModoActivo('pronunciacion')}>
             <span className="modo-icon">🗣️</span>
             <h3>Pronunciación</h3>
-            <p>Próximamente</p>
-            <span className="modo-xp">🔒 Pronto</span>
+            <p>Di la palabra en voz alta y gana XP</p>
+            <span className="modo-xp">+75 XP por palabra</span>
           </div>
         </div>
       </div>

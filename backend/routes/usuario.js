@@ -47,6 +47,7 @@ router.post('/actualizar-xp', verificarToken, async (req, res) => {
         victorias = victorias + $4
       WHERE id = $5
       RETURNING id, nombre, email, xp, nivel, racha, partidas, victorias, rango`,
+   
       [
         xpFinal,
         nuevoNivel,
@@ -54,8 +55,23 @@ router.post('/actualizar-xp', verificarToken, async (req, res) => {
         gano ? 1 : 0,
         req.usuarioId
       ]
-    )
 
+    )
+ // Sumar XP de liga también
+await pool.query(
+  'UPDATE usuarios SET liga_xp = liga_xp + $1 WHERE id = $2',
+  [xp_ganado, req.usuarioId]
+)
+
+// Verificar ascenso de liga
+const LIGAS = ['Bronce', 'Plata', 'Oro', 'Diamante', 'Legend']
+const usuarioLiga = await pool.query('SELECT liga, liga_xp FROM usuarios WHERE id = $1', [req.usuarioId])
+const { liga, liga_xp } = usuarioLiga.rows[0]
+const indiceActual = LIGAS.indexOf(liga || 'Bronce')
+if (liga_xp >= 1000 && indiceActual < LIGAS.length - 1) {
+  const nuevaLiga = LIGAS[indiceActual + 1]
+  await pool.query('UPDATE usuarios SET liga = $1, liga_xp = 0 WHERE id = $2', [nuevaLiga, req.usuarioId])
+}
     res.json({ usuario: actualizado.rows[0] })
   } catch (err) {
     console.error(err)

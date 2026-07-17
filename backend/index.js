@@ -24,6 +24,7 @@ const chatRoutes = require('./routes/chat')
 const torneosRoutes = require('./routes/torneos')
 const iaRoutes = require('./routes/ia')
 const clanesRoutes = require('./routes/clanes')
+const ligaRoutes = require('./routes/liga')
 
 app.use('/auth', authRoutes)
 app.use('/usuario', usuarioRoutes)
@@ -33,6 +34,7 @@ app.use('/chat', chatRoutes)
 app.use('/torneos', torneosRoutes)
 app.use('/ia', iaRoutes)
 app.use('/clanes', clanesRoutes)
+app.use('/liga', ligaRoutes)
 
 app.get('/', (req, res) => {
   res.json({ mensaje: '🗣️ Street Talk API funcionando!' })
